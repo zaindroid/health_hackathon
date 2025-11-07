@@ -110,53 +110,6 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           </div>
         )}
 
-        {/* Transcript display */}
-        {finalTranscripts.length > 0 && (
-          <div style={{
-            width: '100%',
-            maxWidth: '600px',
-            marginTop: '30px',
-            padding: '20px',
-            backgroundColor: '#f9fafb',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px', fontWeight: '500' }}>
-              You said:
-            </div>
-            {finalTranscripts.map((t, idx) => (
-              <div key={idx} style={{ fontSize: '16px', color: '#111827', marginBottom: '8px' }}>
-                {t.text}
-              </div>
-            ))}
-            {interimTranscript && (
-              <div style={{ fontSize: '16px', color: '#9ca3af', fontStyle: 'italic' }}>
-                {interimTranscript.text}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* AI Response */}
-        {llmResponse && (
-          <div style={{
-            width: '100%',
-            maxWidth: '600px',
-            marginTop: '20px',
-            padding: '20px',
-            backgroundColor: '#eff6ff',
-            borderRadius: '8px',
-            border: '1px solid #3b82f6'
-          }}>
-            <div style={{ fontSize: '14px', color: '#1e40af', marginBottom: '12px', fontWeight: '500' }}>
-              🤖 AI Response:
-            </div>
-            <div style={{ fontSize: '16px', color: '#1e3a8a' }}>
-              {llmResponse.utterance}
-            </div>
-          </div>
-        )}
-
         {/* Manual controls (if needed) */}
         {!isRecording && (
           <button
