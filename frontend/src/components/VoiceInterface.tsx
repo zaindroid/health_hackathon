@@ -3,6 +3,7 @@
  * Minimal UI for voice interaction testing
  */
 
+import { useEffect, useRef } from 'react';
 import { useVoiceAgent } from '../hooks/useVoiceAgent';
 import './VoiceInterface.css';
 
@@ -16,124 +17,169 @@ export function VoiceInterface() {
     startRecording,
     stopRecording,
     clearTranscript,
+    conversation,
   } = useVoiceAgent();
-
-  // Get final transcripts only
-  const finalTranscripts = transcript.filter((t) => t.isFinal);
-
-  // Get interim transcript (most recent)
   const interimTranscript = transcript.find((t) => !t.isFinal);
+  const userTurns = conversation.filter((turn) => turn.role === 'user');
+  const assistantTurns = conversation.filter((turn) => turn.role === 'assistant');
+
+  const userFeedRef = useRef<HTMLDivElement | null>(null);
+  const assistantFeedRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (userFeedRef.current) {
+      userFeedRef.current.scrollTo({
+        top: userFeedRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [userTurns, interimTranscript]);
+
+  useEffect(() => {
+    if (assistantFeedRef.current) {
+      assistantFeedRef.current.scrollTo({
+        top: assistantFeedRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [assistantTurns]);
+
+  const formatTimestamp = (timestamp: number) => {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="voice-interface">
-      <div className="header">
-        <h1>🏥 AI Voice Agent</h1>
-        <p className="subtitle">Healthcare Education Assistant</p>
-      </div>
-
-      {/* Connection Status */}
-      <div className="status-bar">
-        <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+      <div className="panel-scroll">
+        <div className="header">
+          <h1>🏥 AI Voice Agent</h1>
+          <p className="subtitle">Healthcare Education Assistant</p>
         </div>
-        {isRecording && <div className="recording-indicator">🎤 Recording...</div>}
-      </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="error-banner">
-          ⚠️ {error}
+        <div className="status-bar">
+          <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
+            {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          </div>
+          {isRecording && <div className="recording-indicator">🎤 Recording...</div>}
         </div>
-      )}
 
-      {/* Controls */}
-      <div className="controls">
-        {!isRecording ? (
-          <button
-            className="btn btn-primary btn-start"
-            onClick={startRecording}
-            disabled={!isConnected}
-          >
-            🎤 Start Talking
-          </button>
-        ) : (
-          <button
-            className="btn btn-danger btn-stop"
-            onClick={stopRecording}
-          >
-            🛑 Stop
-          </button>
-        )}
+        {error && <div className="error-banner">⚠️ {error}</div>}
 
-        <button
-          className="btn btn-secondary"
-          onClick={clearTranscript}
-          disabled={transcript.length === 0}
-        >
-          🗑️ Clear
-        </button>
-      </div>
-
-      {/* Transcript Display */}
-      <div className="transcript-section">
-        <h2>📝 Transcript</h2>
-        <div className="transcript-box">
-          {finalTranscripts.length === 0 && !interimTranscript ? (
-            <p className="placeholder">Your speech will appear here...</p>
+        <div className="controls">
+          {!isRecording ? (
+            <button
+              className="btn btn-primary btn-start"
+              onClick={startRecording}
+              disabled={!isConnected}
+            >
+              🎤 Start Talking
+            </button>
           ) : (
-            <>
-              {finalTranscripts.map((t, idx) => (
-                <div key={idx} className="transcript-item final">
-                  {t.text}
-                </div>
-              ))}
-              {interimTranscript && (
-                <div className="transcript-item interim">
-                  {interimTranscript.text}
-                </div>
-              )}
-            </>
+            <button
+              className="btn btn-danger btn-stop"
+              onClick={stopRecording}
+            >
+              🛑 Stop
+            </button>
           )}
-        </div>
-      </div>
 
-      {/* AI Response Display */}
-      {llmResponse && (
-        <div className="response-section">
-          <h2>🤖 AI Response</h2>
-          <div className="response-box">
-            <div className="response-utterance">
-              {llmResponse.utterance}
+          <button
+            className="btn btn-secondary"
+            onClick={clearTranscript}
+            disabled={conversation.length === 0 && !interimTranscript}
+          >
+            🗑️ Clear
+          </button>
+        </div>
+
+        <div className="conversation-section">
+          <div className="conversation-header">
+            <h2>📝 Live Transcript</h2>
+            <p>Monitor what you say and how the agent answers with synchronized panels.</p>
+          </div>
+
+          <div className="conversation-columns">
+            <div className="conversation-column">
+              <div className="column-header">You</div>
+              <div className="conversation-feed" ref={userFeedRef}>
+                {userTurns.length === 0 && !interimTranscript ? (
+                  <p className="placeholder">Your speech will appear here.</p>
+                ) : (
+                  <>
+                    {userTurns.map((turn, idx) => (
+                      <div key={`user-${idx}-${turn.timestamp}`} className="message-bubble user">
+                        <p>{turn.text}</p>
+                        <span className="message-meta">{formatTimestamp(turn.timestamp)}</span>
+                      </div>
+                    ))}
+                    {interimTranscript && (
+                      <div className="message-bubble interim">
+                        <p>{interimTranscript.text}</p>
+                        <span className="message-meta">listening…</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
-            {llmResponse.intent && (
-              <div className="response-meta">
-                <span className="label">Intent:</span>
-                <span className="badge">{llmResponse.intent}</span>
+            <div className="conversation-column">
+              <div className="column-header">Assistant</div>
+              <div className="conversation-feed" ref={assistantFeedRef}>
+                {assistantTurns.length === 0 ? (
+                  <p className="placeholder">Assistant replies will appear here.</p>
+                ) : (
+                  assistantTurns.map((turn, idx) => (
+                    <div key={`assistant-${idx}-${turn.timestamp}`} className="message-bubble assistant">
+                      <p>{turn.text}</p>
+                      <span className="message-meta">{formatTimestamp(turn.timestamp)}</span>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
+            </div>
+          </div>
+        </div>
 
-            {llmResponse.tool_action && (
-              <div className="response-meta">
-                <span className="label">Tool Action:</span>
-                <code className="tool-action">
-                  {llmResponse.tool_action.op} → {llmResponse.tool_action.target}
-                </code>
-              </div>
+        <div className="insight-section">
+          <h3>🤖 Assistant Details</h3>
+          <div className="insight-card">
+            {llmResponse ? (
+              <>
+                <p className="insight-utterance">{llmResponse.utterance}</p>
+                <div className="insight-meta">
+                  <span className="label">Intent</span>
+                  <span className="badge">{llmResponse.intent || 'n/a'}</span>
+                </div>
+                {llmResponse.tool_action && (
+                  <div className="insight-meta">
+                    <span className="label">Tool Action</span>
+                    <code className="tool-action">
+                      {llmResponse.tool_action.op}
+                      {llmResponse.tool_action.target ? ` → ${llmResponse.tool_action.target}` : ''}
+                    </code>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="placeholder">Assistant insights will appear after your first question.</p>
             )}
           </div>
         </div>
-      )}
 
-      {/* Instructions */}
-      <div className="instructions">
-        <h3>💡 Instructions</h3>
-        <ul>
-          <li>Click "Start Talking" to begin voice interaction</li>
-          <li>Speak clearly about anatomy, physiology, or medical topics</li>
-          <li>The AI will respond with educational information</li>
-          <li>Example: "Tell me about the heart" or "What does the left ventricle do?"</li>
-        </ul>
+        <div className="instructions">
+          <h3>💡 Instructions</h3>
+          <ul>
+            <li>Click "Start Talking" to begin voice interaction.</li>
+            <li>Speak clearly about anatomy, physiology, or medical topics.</li>
+            <li>The AI will respond with educational information and visuals.</li>
+            <li>Try prompts like "Show the skeletal head view" or "Explain migraine pain".</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

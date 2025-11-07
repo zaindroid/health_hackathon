@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { serverConfig, printConfig, checkConfiguration } from './config/env';
 import { VoiceSessionHandler } from './routes/voice';
 import { testLLMProvider } from './llm';
+import path from 'path';
 
 class VoiceAgentServer {
   private app: Express;
@@ -40,6 +41,9 @@ class VoiceAgentServer {
 
     // JSON body parser
     this.app.use(express.json());
+
+    // Serve headache education videos for the routed React player
+    this.app.use('/videos', express.static(path.join(__dirname, '../videos')));
 
     // Request logging
     this.app.use((req, res, next) => {

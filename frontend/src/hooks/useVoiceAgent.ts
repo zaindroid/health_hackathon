@@ -6,12 +6,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ServerMessage, TranscriptEvent, LLMResponse } from '../../../shared/types';
 
+export interface ConversationTurn {
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: number;
+}
+
 interface VoiceAgentState {
   isConnected: boolean;
   isRecording: boolean;
   transcript: TranscriptEvent[];
   llmResponse: LLMResponse | null;
   error: string | null;
+  conversation: ConversationTurn[];
 }
 
 interface VoiceAgentActions {
@@ -30,6 +37,7 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
   const [transcript, setTranscript] = useState<TranscriptEvent[]>([]);
   const [llmResponse, setLlmResponse] = useState<LLMResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conversation, setConversation] = useState<ConversationTurn[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -111,6 +119,26 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
               return [...prev, message.transcript!];
             }
           });
+
+          if (message.transcript.isFinal) {
+            const finalText = message.transcript.text.trim();
+            if (finalText) {
+              setConversation((prev) => {
+                const last = prev[prev.length - 1];
+                if (last && last.role === 'user' && last.text === finalText) {
+                  return prev;
+                }
+                return [
+                  ...prev,
+                  {
+                    role: 'user',
+                    text: finalText,
+                    timestamp: message.transcript!.timestamp,
+                  },
+                ];
+              });
+            }
+          }
         }
         break;
 
@@ -118,6 +146,24 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
         if (message.llmResponse) {
           console.log('🤖 LLM Response:', message.llmResponse);
           setLlmResponse(message.llmResponse);
+
+          const reply = message.llmResponse.utterance?.trim();
+          if (reply) {
+            setConversation((prev) => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === 'assistant' && last.text === reply) {
+                return prev;
+              }
+              return [
+                ...prev,
+                {
+                  role: 'assistant',
+                  text: reply,
+                  timestamp: Date.now(),
+                },
+              ];
+            });
+          }
 
           // Note: Audio will come from Cartesia in separate 'audio' message
           // Do NOT use Web Speech API - only use Cartesia audio when received
@@ -151,6 +197,13 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
         if (message.viewerModel) {
           console.log('🧭 Received viewer model update:', message.viewerModel);
           loadBioDigitalModel(message.viewerModel);
+        }
+        break;
+
+      case 'viewer_catalog':
+        if (message.viewerCatalog) {
+          console.log('📦 Received anatomy viewer catalog:', message.viewerCatalog);
+          broadcastViewerCatalog(message.viewerCatalog);
         }
         break;
 
@@ -265,6 +318,7 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
   const clearTranscript = useCallback(() => {
     setTranscript([]);
     setLlmResponse(null);
+    setConversation([]);
   }, []);
 
   /**
@@ -277,26 +331,6 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
       int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
     return int16Array;
-  };
-
-  /**
-   * Speak text using Web Speech API (fallback)
-   */
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      console.log('🔊 Speaking:', text);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      console.warn('⚠️  Speech synthesis not supported');
-    }
   };
 
   /**
@@ -394,6 +428,16 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
   };
 
   /**
+   * Notify 3D viewer about available model catalog
+   */
+  const broadcastViewerCatalog = (catalog: NonNullable<ServerMessage['viewerCatalog']>) => {
+    const event = new CustomEvent('biodigital-catalog', {
+      detail: catalog,
+    });
+    window.dispatchEvent(event);
+  };
+
+  /**
    * Auto-connect on mount
    */
   useEffect(() => {
@@ -427,6 +471,7 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
     transcript,
     llmResponse,
     error,
+    conversation,
     connect,
     disconnect,
     startRecording,

@@ -1,5 +1,377 @@
 {
   "models": [
+
+
+
+        {
+          "id": "muscular_system_detailed_medical",
+          "name": "Full Detailed Human Muscular System (Medical Focus)",
+          "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6dPF&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=false&ui-audio=false&ui-chapter-list=false&ui-fullscreen=false&ui-help=false&ui-info=false&ui-label-list=true&ui-layers=false&ui-skin-layers=false&ui-loader=circle&ui-media-controls=none&ui-menu=false&ui-nav=false&ui-search=false&ui-tools=false&ui-tutorial=false&ui-undo=false&ui-whiteboard=false&initial.none=true&disable-scroll=false&uaid=MLL4J&paid=o_22e32b94",
+          "description": "An exceptionally comprehensive 3D model of the human muscular system, if there are general queries regarding muscles of any sort that don't fit into anywhere else then this is the right place to visualize them, designed for in-depth study by medical professionals (physicians, surgeons, physical therapists, etc.). Provides views optimized for clinical assessment and diagnosis.",
+          "aiContext": {
+              "topics": ["muscles", "myology", "skeletal muscles", "cardiac muscle", "tendons", "pathophysiology", "biomechanics"],
+              "default_view": "full_body_anterior",
+              "viewContexts": {
+                  "full_body_anterior": ["superficial musculature", "gross anatomy", "postural assessment"],
+                  "hands": ["intrinsic hand muscles", "forearm compartment syndrome", "carpal tunnel"],
+                  "knees": ["cruciate ligaments", "menisci", "patellar tracking", "gait analysis"],
+                  "lower_back": ["paraspinal muscles", "lumbar spine stability", "disc herniation context"],
+                  "shoulders": ["rotator cuff complex", "impingement syndrome", "shoulder joint kinematics"],
+                  "head": ["facial expression muscles", "mastication", "TMJ disorders", "cervical muscles"],
+                  "feet": ["plantar fascia", "ankle sprain ligaments", "tarsal tunnel syndrome"],
+                  "heart_thoracic": ["cardiac muscle structure", "diaphragm", "intercostal muscles", "thoracic surgery context"]
+              }
+          },
+          "viewpoints": [
+              {
+                  "id": "full_body_anterior",
+                  "name": "Default Full Body Anterior",
+                  "buttonLabel": "Full Musculature Overview",
+                  "camera": {
+                      "position": { "x": 0, "y": 85, "z": -200 },
+                      "target": { "x": 0, "y": 85, "z": 0 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["All major superficial anterior muscles"],
+                      "regions": ["All major muscle groups"]
+                  },
+                  "description": "The default view provides a general anterior reference of the entire muscular system, excellent for overall muscle group identification and postural analysis.",
+                  "clinicalContext": "Used for rapid assessment of gross muscular symmetry, identification of hypertrophied or atrophied muscle groups, and general orientation before focusing on specific regions.",
+                  "commonUseCases": [
+                      "Gross muscle anatomy teaching",
+                      "Baseline postural assessment",
+                      "Referencing overall body symmetry"
+                  ]
+              },
+              {
+                  "id": "hands",
+                  "name": "Hands and Forearm Close-up",
+                  "buttonLabel": "Hands & Forearm",
+                  "camera": {
+                      "position": { "x": 16.3, "y": 88.6, "z": -22.6 },
+                      "target": { "x": 17.3, "y": 88.5, "z": -21.8 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["Intrinsic hand muscles", "Flexors and extensors of the forearm", "Tendon sheaths"],
+                      "regions": ["Wrist", "Carpal region", "Palmar and dorsal surfaces"]
+                  },
+                  "description": "Detailed view of the complex musculature and tendon systems of the hand and distal forearm.",
+                  "clinicalContext": "Essential for hand surgeons and occupational therapists to visualize pathology related to **Carpal Tunnel Syndrome**, **De Quervain’s Tenosynovitis**, and assessing nerve entrapment sites.",
+                  "commonUseCases": [
+                      "Pre-surgical planning for hand procedures",
+                      "Explaining tendon injury/repair",
+                      "Differential diagnosis of hand pain"
+                  ]
+              },
+              {
+                  "id": "knees",
+                  "name": "Knee Joint Musculature",
+                  "buttonLabel": "Knees",
+                  "camera": {
+                      "position": { "x": 0.4, "y": 49.0, "z": -14.7 },
+                      "target": { "x": 2.1, "y": 47.2, "z": -1.0 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["Quadriceps group", "Hamstrings", "Gastrocnemius", "Popliteus"],
+                      "regions": ["Knee joint capsule", "Proximal tibia", "Distal femur"]
+                  },
+                  "description": "Close-up on the stabilizing muscles and groups surrounding the knee joint.",
+                  "clinicalContext": "Used by orthopedic specialists and physical therapists to understand dynamic **knee stability**, patellar tracking issues, and the impact of muscle imbalance on **ACL/PCL** strain.",
+                  "commonUseCases": [
+                      "Rehabilitation protocol design",
+                      "Assessing ligament injury mechanisms",
+                      "Understanding joint loading"
+                  ]
+              },
+              {
+                  "id": "lower_back",
+                  "name": "Lower Back (Lumbar/Sacral) Muscles",
+                  "buttonLabel": "Lower Back",
+                  "camera": {
+                      "position": { "x": -0.6, "y": 112.5, "z": 45.5 },
+                      "target": { "x": -3.4, "y": 110.4, "z": -2.8 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["Erector spinae group", "Multifidus", "Quadratus lumborum", "Gluteal muscles"],
+                      "regions": ["Lumbar spine", "Sacrum", "Pelvic girdle"]
+                  },
+                  "description": "Posterior-focused view of the deep and superficial muscles of the lower back and core stabilizers.",
+                  "clinicalContext": "Critical for diagnosing sources of **low back pain**, understanding **spinal stenosis** context, and planning injections or manual therapy targeting the paraspinal muscles.",
+                  "commonUseCases": [
+                      "Diagnosing muscle strain vs. nerve impingement",
+                      "Explaining chronic low back pain pathology",
+                      "Spine stability exercise prescription"
+                  ]
+              },
+              {
+                  "id": "shoulders",
+                  "name": "Shoulder Girdle Musculature",
+                  "buttonLabel": "Shoulders",
+                  "camera": {
+                      "position": { "x": -0.9, "y": 149.1, "z": 39.4 },
+                      "target": { "x": -5.1, "y": 139.9, "z": -2.5 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["Deltoids (all heads)", "Rotator cuff group (SITS)", "Pectoralis", "Trapezius"],
+                      "regions": ["Glenohumeral joint", "Acromioclavicular joint"]
+                  },
+                  "description": "Lateral close-up of the complex muscles stabilizing and moving the shoulder joint and scapula.",
+                  "clinicalContext": "Essential for assessing and explaining **rotator cuff tears**, **impingement syndrome**, and **shoulder instability** to patients. Useful for pre-operative visualization.",
+                  "commonUseCases": [
+                      "Orthopedic shoulder consultation",
+                      "Planning physical therapy for shoulder injuries",
+                      "Visualizing bursitis location"
+                  ]
+              },
+              {
+                  "id": "eyes_and_muscles",
+                  "name": "Eyes and Extraocular Muscles Close-up",
+                  "buttonLabel": "Eyes & Ocular Muscles",
+                  "camera": {
+                      "position": { "x": 0.0, "y": 165.0, "z": -10.0 },
+                      "target": { "x": 0.0, "y": 162.0, "z": 0.0 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["Superior rectus", "Inferior rectus", "Medial rectus", "Lateral rectus", "Superior oblique", "Inferior oblique", "Levator palpebrae superioris"],
+                      "regions": ["Orbital cavity", "Eye globe", "Oculomotor nerve paths (implied)"]
+                  },
+                  "description": "Highly detailed, focused view of the **six extraocular muscles** and the **eye globe** within the orbital cavity, showing their origins and insertions for ocular movement.",
+                  "clinicalContext": "Crucial for ophthalmologists and neurologists to diagnose and explain conditions like **Strabismus** (eye misalignment), **Diplopia** (double vision), and palsies of **Cranial Nerves III, IV, and VI** (Oculomotor, Trochlear, Abducens).",
+                  "commonUseCases": [
+                      "Assessing and explaining ocular motility disorders",
+                      "Visualizing surgical fields for eye muscle surgery",
+                      "Teaching the actions of individual extraocular muscles (e.g., elevation, depression, adduction, abduction)"
+                  ]
+              },
+              {
+                  "id": "feet",
+                  "name": "Feet and Ankle Musculature",
+                  "buttonLabel": "Feet & Ankles",
+                  "camera": {
+                      "position": { "x": 23.5, "y": 9.7, "z": 22.0 },
+                      "target": { "x": 10.8, "y": 4.5, "z": 7.8 }
+                  },
+                  "anatomyVisible": {
+                      "muscles": ["Intrinsic foot muscles", "Peroneal group", "Tibialis anterior/posterior", "Achilles tendon"],
+                      "regions": ["Tarsal region", "Plantar surface", "Ankle joint"]
+                  },
+                  "description": "Focused view on the complex musculature and supporting structures of the foot and ankle.",
+                  "clinicalContext": "Used by podiatrists and orthopedic specialists to analyze the causes of conditions like **Plantar Fasciitis**, **Achilles Tendinopathy**, and to assess structural support for orthotics.",
+                  "commonUseCases": [
+                      "Explaining biomechanical issues (pronation/supination)",
+                      "Assessing ligament damage from ankle sprains",
+                      "Understanding gait cycle muscles"
+                  ]
+              }
+          ]
+      },
+
+      {
+        "id": "acid_reflux",
+        "name": "Acid Reflux (GERD) and Esophagitis",
+        "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6dP5&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=false&ui-audio=false&ui-chapter-list=false&ui-fullscreen=false&ui-help=false&ui-info=false&ui-label-list=true&ui-layers=false&ui-skin-layers=false&ui-loader=circle&ui-media-controls=none&ui-menu=false&ui-nav=false&ui-search=false&ui-tools=false&ui-tutorial=false&ui-undo=false&ui-whiteboard=false&initial.none=true&disable-scroll=false&uaid=MLM6e&paid=o_22e32b94",
+        "description": "A 3D model illustrating Gastroesophageal Reflux Disease (GERD), showing the lower esophageal sphincter, stomach, and the resulting inflammation (esophagitis) of the esophagus lining.",
+        "aiContext": {
+            "topics": ["digestive system", "esophagus", "stomach", "LES", "esophagitis", "GERD", "heartburn"],
+            "default_view": "system_overview",
+            "viewContexts": {
+                "system_overview": ["upper digestive tract", "esophagus in context", "stomach position"],
+                "inflammation_closeup": ["esophagitis", "inflammation", "acid damage", "mucosa", "lining of esophagus"]
+            }
+        },
+        "viewpoints": [
+            {
+                "id": "system_overview",
+                "name": "Default Overview",
+                "buttonLabel": "System Overview",
+                "camera": {
+                    
+                    "position": { "x": -57.82, "y": 151.02, "z": -24.29 },
+                    "target": { "x": 6.23, "y": 141.29, "z": 13.84 }
+                },
+                "anatomyVisible": {
+                    "structures": ["Esophagus", "Stomach", "Lower Esophageal Sphincter (LES)"],
+                    "regions": ["Upper abdomen", "Thoracic cavity (lower part)"]
+                },
+                "description": "The initial, wide view showing the relationship between the stomach and the esophagus, illustrating the location of the reflux problem within the upper digestive system.",
+                "clinicalContext": "Provides anatomical context for where GERD occurs, particularly the area around the diaphragm (hiatus) and the LES, which fails to prevent acid from moving up.",
+                "commonUseCases": [
+                    "Initial anatomy education on GERD location",
+                    "Showing the path of the esophagus to the stomach",
+                    "Understanding the role of the LES"
+                ]
+            },
+            {
+                "id": "inflammation_closeup",
+                "name": "Esophagitis Close-up",
+                "buttonLabel": "Inflammation View",
+                "camera": {
+                    
+                    "position": { "x": 6.0, "y": 140.0, "z": 10.0 },
+                    "target": { "x": 6.0, "y": 142.0, "z": 13.0 }
+                },
+                "anatomyVisible": {
+                    "structures": ["Esophagus (Inflamed region)", "Lower Esophageal Sphincter (LES)"],
+                    "regions": ["Gastroesophageal junction"]
+                },
+                "description": "Close-up, focused view on the **inflamed inner lining (mucosa)** of the lower esophagus, clearly demonstrating **esophagitis** caused by chronic acid reflux.",
+                "clinicalContext": "Critical for visualizing the direct tissue damage from stomach acid. This view helps patients and practitioners understand the severity of the inflammation, which can lead to complications like erosions or Barrett's esophagus.",
+                "commonUseCases": [
+                    "Educating patients about tissue damage severity",
+                    "Explaining the pathology of esophagitis (inflammation)",
+                    "Visualizing endoscopic findings"
+                ]
+            }
+        ]
+    },
+
+
+    {
+      "id": "headache_types_cranial_pain",
+      "name": "Primary Headache Types and Pain Localization",
+      "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6csj&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=MLIP3&paid=o_22e32b94",
+      "description": "A dictionary of the four most common headache types, detailing their typical pain patterns and sensations within the head, with linked 3D views.",
+      "aiContext": {
+        "topics": [
+          "migraine",
+          "tension headache",
+          "cluster headache",
+          "sinus headache",
+          "pain localization"
+        ],
+        "default_view": "headaches_overview",
+        "viewContexts": {
+          "sinus": [
+            "paranasal sinuses",
+            "facial pain",
+            "forehead pressure",
+            "nasal congestion",
+            "sinus pressure"
+          ],
+          "tension": [
+            "bilateral head pressure",
+            "band-like pain",
+            "occipital tension",
+            "tight band",
+            "stress headache"
+          ],
+          "migraine": [
+            "throbbing pain",
+            "unilateral pain",
+            "photophobia",
+            "light sensitivity",
+            "sound sensitivity",
+            "nausea",
+            "aura"
+          ],
+          "cluster": [
+            "periorbital pain",
+            "severe piercing pain",
+            "eye symptoms",
+            "behind one eye",
+            "eye tearing",
+            "eye redness"
+          ]
+        }
+      },
+      "viewpoints": [
+        {
+          "id": "sinus_headache",
+          "name": "Sinus Headache",
+          "buttonLabel": "Sinus Headache View",
+          "camera": {
+            "position": { "x": 0.5, "y": 165.0, "z": -55.0 },
+            "target": { "x": 0.0, "y": 160.0, "z": -10.0 }
+          },
+          "anatomyVisible": {
+            "muscles": [],
+            "bones": [
+              "Maxilla",
+              "Frontal bone"
+            ],
+            "regions": [
+              "Forehead",
+              "Cheekbones",
+              "Nasal bridge"
+            ]
+          },
+          "description": "Pain and pressure centered around the facial sinuses due to inflammation or infection.",
+          "clinicalContext": "Pain is typically dull and deep behind the cheekbones, forehead, and bridge of the nose. Often worse with bending forward.",
+          "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6csj&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=MLIOR&paid=o_22e32b94"
+        },
+        {
+          "id": "tension_headache",
+          "name": "Tension Headache",
+          "buttonLabel": "Tension Headache View",
+          "camera": {
+            "position": { "x": 0.0, "y": 165.0, "z": -60.0 },
+            "target": { "x": 0.0, "y": 160.0, "z": -8.0 }
+          },
+          "anatomyVisible": {
+            "muscles": [
+              "Temporalis",
+              "Frontalis"
+            ],
+            "bones": [
+              "Cranium"
+            ],
+            "regions": [
+              "Forehead",
+              "Temples",
+              "Occiput"
+            ]
+          },
+          "description": "Most common headache type, characterized by non-pulsating, tightening pain across the scalp.",
+          "clinicalContext": "Pain feels like a tight band or pressure wrapped around the head (bilateral). It is generally mild to moderate and non-throbbing.",
+          "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6csj&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=MLIP3&paid=o_22e32b94"
+        },
+        {
+          "id": "cluster_headache",
+          "name": "Cluster Headache",
+          "buttonLabel": "Cluster Headache View",
+          "camera": {
+            "position": { "x": 48.0, "y": 162.0, "z": -2.0 },
+            "target": { "x": 5.0, "y": 158.0, "z": -2.0 }
+          },
+          "anatomyVisible": {
+            "muscles": [],
+            "bones": [
+              "Orbital bone"
+            ],
+            "regions": [
+              "Eye/Orbital area",
+              "Temple"
+            ]
+          },
+          "description": "A rare but extremely painful headache type, occurring in clusters over a period of weeks or months.",
+          "clinicalContext": "Intense, piercing, unilateral pain (one side) focused in or around one eye. Often accompanied by eye redness, tearing, or eyelid drooping on the affected side.",
+          "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6csj&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=MLIPd&paid=o_22e32b94"
+        },
+        {
+          "id": "migraine_headache",
+          "name": "Migraine Headache",
+          "buttonLabel": "Migraine Headache View",
+          "camera": {
+            "position": { "x": -42.0, "y": 162.0, "z": -6.0 },
+            "target": { "x": -5.0, "y": 158.0, "z": -4.0 }
+          },
+          "anatomyVisible": {
+            "muscles": [],
+            "bones": [
+              "Temporal bone"
+            ],
+            "regions": [
+              "Lateral head (unilateral)",
+              "Occiput"
+            ]
+          },
+          "description": "Recurrent attacks of moderate to severe, throbbing pain, often accompanied by non-pain symptoms like nausea or light/sound sensitivity.",
+          "clinicalContext": "Pain is typically pulsing or throbbing and often affects one side of the head (unilateral), lasting 4 to 72 hours. It is often worsened by physical activity.",
+          "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6csj&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=MLIQ3&paid=o_22e32b94"
+        }
+      ]
+    },
+
     {
       "id": "neck_shoulders_upper_back",
       "name": "Neck, Shoulders & Upper Back",
@@ -113,7 +485,7 @@
     {
       "id": "skeletal_system",
       "name": "Male Skeletal System",
-      "biodigitalUrl": "https://human.biodigital.com/viewer/?id=production/maleAdult/male_system_anatomy_skeletal_09&ui-info=true&dk=c0c3685a4e0996e0095ae1a7d7cb46079b9db70a",
+      "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6dQE&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=false&ui-audio=false&ui-chapter-list=false&ui-fullscreen=false&ui-help=false&ui-info=false&ui-label-list=true&ui-layers=false&ui-skin-layers=false&ui-loader=circle&ui-media-controls=none&ui-menu=false&ui-nav=false&ui-search=false&ui-tools=false&ui-tutorial=false&ui-undo=false&ui-whiteboard=false&initial.none=true&disable-scroll=false&dk=c0c3685a4e0996e0095ae1a7d7cb46079b9db70a",
       "description": "Complete skeletal system showing all major bones of the human body",
       "aiContext": {
         "topics": ["bones", "joints", "vertebrae", "scapula", "clavicle", "cervical spine", "thoracic spine"],
@@ -122,6 +494,7 @@
           "front": ["anterior", "front", "ventral", "sternum", "ribs", "pelvis"],
           "back": ["posterior", "back", "dorsal", "vertebral column", "scapulae"],
           "right_shoulder": ["right shoulder joint", "right clavicle", "right scapula", "right humerus head"],
+          "head": ["headache", "head pain", "head hurts", "skull", "cranial pain"],
           "left_shoulder": ["left shoulder joint", "left clavicle", "left scapula", "left humerus head"]
         }
       },

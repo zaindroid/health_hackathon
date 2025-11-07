@@ -65,7 +65,7 @@ export interface ClientMessage {
     action?: 'start' | 'stop';
 }
 export interface ServerMessage {
-    type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command';
+    type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command' | 'viewer_model' | 'viewer_catalog';
     data?: any;
     transcript?: TranscriptEvent;
     llmResponse?: LLMResponse;
@@ -95,7 +95,41 @@ export interface ServerMessage {
         };
         objectName?: string;
     };
+        viewerModel?: {
+            modelId: string;
+            modelName: string;
+            biodigitalUrl: string;
+            viewpointUrl?: string;
+            viewpointId?: string;
+            viewpointName?: string;
+            camera?: CameraPositionMessage;
+            autoSelected?: boolean;
+            reason?: string;
+            matchedTerms?: string[];
+            visible?: boolean;
+        };
+        viewerCatalog?: {
+            models: Array<{
+                modelId: string;
+                modelName: string;
+                biodigitalUrl: string;
+                defaultViewId?: string;
+                defaultCamera?: CameraPositionMessage;
+            }>;
+        };
 }
+    export interface CameraPositionMessage {
+        position?: {
+            x: number;
+            y: number;
+            z: number;
+        };
+        target?: {
+            x: number;
+            y: number;
+            z: number;
+        };
+    }
 export interface AppConfig {
     llmProvider: 'bedrock' | 'openai' | 'local' | 'mock';
     sttProvider: 'deepgram';

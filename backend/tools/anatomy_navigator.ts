@@ -7,6 +7,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+const HEADACHE_MODEL_ID = 'headache_types_cranial_pain';
+const SKELETAL_MODEL_ID = 'skeletal_system';
+const SKELETAL_HEAD_VIEWPOINT_ID = 'head';
+const HEADACHE_CONTEXT_TO_VIEWPOINT: Record<string, string> = {
+  sinus: 'sinus_headache',
+  tension: 'tension_headache',
+  migraine: 'migraine_headache',
+  cluster: 'cluster_headache',
+};
+const GENERIC_HEADACHE_TOKENS = new Set(['pain', 'pressure', 'ache', 'aches', 'hurt', 'hurts', 'hurting', 'painful', 'head', 'headache', 'headaches', 'eye']);
+
 export interface CameraPosition {
   position: { x: number; y: number; z: number };
   target: { x: number; y: number; z: number };
@@ -28,7 +39,8 @@ export interface Viewpoint {
   id: string;
   name: string;
   buttonLabel: string;
-  camera: CameraPosition;
+  camera?: CameraPosition;
+  biodigitalUrl?: string;
   anatomyVisible?: any;
   description?: string;
   clinicalContext?: string;
@@ -65,6 +77,8 @@ export interface AnatomyMatchResult {
   viewpointId: string;
   viewpointName: string;
   biodigitalUrl: string;
+  viewpointUrl?: string;
+  viewpointCamera?: CameraPosition;
   score: number;
   matchedKeywords: string[];
   reason: string;
@@ -72,7 +86,7 @@ export interface AnatomyMatchResult {
 
 export class AnatomyNavigator {
   private data: AnatomyDatabase;
-  private currentModelId: string = 'neck_shoulders_upper_back';
+  private currentModelId: string = SKELETAL_MODEL_ID;
 
   constructor(databasePath?: string) {
     const dbPath = databasePath || path.join(__dirname, '../navigation_tests/anatomy-data.json');
@@ -112,6 +126,11 @@ export class AnatomyNavigator {
     const viewpoint = model.viewpoints.find((vp) => vp.id === viewpointId);
     if (!viewpoint) {
       console.error(`[-] Viewpoint not found: ${viewpointId} in model ${modelId}`);
+      return null;
+    }
+
+    if (!viewpoint.camera) {
+      console.error(`[-] Viewpoint '${viewpointId}' in model ${modelId} is missing camera data.`);
       return null;
     }
 
@@ -346,6 +365,57 @@ export class AnatomyNavigator {
     return model.viewpoints.find((vp) => vp.id === viewpointId) || null;
   }
 
+  getModelCatalog(): Array<{
+    modelId: string;
+    modelName: string;
+    biodigitalUrl: string;
+    defaultViewId?: string;
+    defaultCamera?: CameraPosition;
+  }> {
+    return this.data.models.map((model) => {
+      const defaultViewId = model.aiContext?.default_view || model.viewpoints[0]?.id;
+      const defaultView = defaultViewId ? model.viewpoints.find((view) => view.id === defaultViewId) : undefined;
+
+      return {
+        modelId: model.id,
+        modelName: model.name,
+        biodigitalUrl: model.biodigitalUrl,
+        defaultViewId,
+        defaultCamera: defaultView?.camera,
+      };
+    });
+  }
+
+  getDefaultMatch(): AnatomyMatchResult | null {
+    const model = this.getModelById(SKELETAL_MODEL_ID);
+    if (!model) {
+      return null;
+    }
+
+    const defaultViewId = this.getDefaultViewId(model);
+    if (!defaultViewId) {
+      return null;
+    }
+
+    const viewpoint = this.getViewpointInfo(model.id, defaultViewId);
+    if (!viewpoint) {
+      return null;
+    }
+
+    return {
+      modelId: model.id,
+      modelName: model.name,
+      viewpointId: viewpoint.id,
+      viewpointName: viewpoint.name,
+      biodigitalUrl: model.biodigitalUrl,
+      viewpointUrl: viewpoint.biodigitalUrl,
+      viewpointCamera: viewpoint.camera,
+      score: 90,
+      matchedKeywords: ['default'],
+      reason: `Default view for ${model.name}.`,
+    };
+  }
+
   /**
    * Suggest the most relevant model/viewpoint pairing for a natural language query
    */
@@ -356,6 +426,12 @@ export class AnatomyNavigator {
     }
 
     const analysis = this.analyzeQuery(cleaned);
+
+    const headacheIntent = this.resolveHeadacheIntent(analysis);
+    if (headacheIntent) {
+      return headacheIntent;
+    }
+
     let best: AnatomyMatchResult | null = null;
 
     for (const model of this.data.models) {
@@ -368,6 +444,7 @@ export class AnatomyNavigator {
 
       modelScore += this.scoreText(analysis, model.name, 2, modelMatches);
       modelScore += this.scoreText(analysis, model.description, 1, modelMatches);
+      modelScore += this.scoreIdentifier(analysis, model.id, 3, modelMatches);
 
       for (const viewpoint of model.viewpoints) {
         const viewMatches = [...modelMatches];
@@ -382,6 +459,8 @@ export class AnatomyNavigator {
 
         viewScore += this.scoreText(analysis, viewpoint.name, 4, viewMatches);
         viewScore += this.scoreText(analysis, viewpoint.description, 2, viewMatches);
+        viewScore += this.scoreText(analysis, viewpoint.buttonLabel, 2.5, viewMatches);
+        viewScore += this.scoreIdentifier(analysis, viewpoint.id, 2.5, viewMatches);
 
         if (viewpoint.clinicalContext) {
           viewScore += this.scoreText(analysis, viewpoint.clinicalContext, 2, viewMatches);
@@ -405,6 +484,8 @@ export class AnatomyNavigator {
             viewpointId: viewpoint.id,
             viewpointName: viewpoint.name,
             biodigitalUrl: model.biodigitalUrl,
+            viewpointUrl: viewpoint.biodigitalUrl,
+            viewpointCamera: viewpoint.camera,
             score: viewScore,
             matchedKeywords: Array.from(new Set(viewMatches)),
             reason: this.buildReason(viewMatches, model.name, viewpoint.name),
@@ -418,6 +499,174 @@ export class AnatomyNavigator {
     }
 
     return best;
+  }
+
+  private resolveHeadacheIntent(analysis: QueryAnalysis): AnatomyMatchResult | null {
+    const specific = this.detectSpecificHeadacheIntent(analysis);
+    if (specific) {
+      return this.buildSpecificHeadacheMatch(specific.viewpointId, specific.matchedKeywords);
+    }
+
+    const general = this.detectGeneralHeadacheIntent(analysis);
+    if (general) {
+      return this.buildGeneralHeadacheMatch(general);
+    }
+
+    return null;
+  }
+
+  private detectSpecificHeadacheIntent(analysis: QueryAnalysis): { viewpointId: string; matchedKeywords: string[] } | null {
+    const model = this.getModelById(HEADACHE_MODEL_ID);
+    const viewContexts = model?.aiContext?.viewContexts;
+    if (!model || !viewContexts) {
+      return null;
+    }
+
+    let bestMatch: { viewpointId: string; matchedKeywords: string[]; score: number } | null = null;
+
+    for (const [contextKey, phrases] of Object.entries(viewContexts)) {
+      const viewpointId = HEADACHE_CONTEXT_TO_VIEWPOINT[contextKey];
+      if (!viewpointId) {
+        continue;
+      }
+
+      const { tokenSet, phraseSet } = this.expandHeadacheKeywords(contextKey, phrases);
+      let score = 0;
+      const matched = new Set<string>();
+
+      tokenSet.forEach((token) => {
+        if (analysis.tokens.has(token)) {
+          matched.add(token);
+          score += 1;
+        }
+      });
+
+      phraseSet.forEach((phrase) => {
+        if (analysis.phrases.has(phrase)) {
+          matched.add(phrase);
+          score += 2;
+        }
+      });
+
+      if (score > 0) {
+        if (!bestMatch || score > bestMatch.score) {
+          bestMatch = {
+            viewpointId,
+            matchedKeywords: Array.from(matched),
+            score,
+          };
+        }
+      }
+    }
+
+    if (!bestMatch) {
+      return null;
+    }
+
+    return {
+      viewpointId: bestMatch.viewpointId,
+      matchedKeywords: bestMatch.matchedKeywords,
+    };
+  }
+
+  private detectGeneralHeadacheIntent(analysis: QueryAnalysis): string[] | null {
+    const matched = new Set<string>();
+    const generalTokens = ['headache', 'headaches', 'headachey'];
+    const generalPhrases = ['head pain', 'head hurts', 'pain in head', 'my head hurts', 'head is hurting', 'hurting head', 'pounding head', 'head pressure'];
+
+    generalTokens.forEach((term) => {
+      const normalized = this.normalize(term);
+      if (analysis.tokens.has(normalized)) {
+        matched.add(term);
+      }
+    });
+
+    generalPhrases.forEach((phrase) => {
+      const normalized = this.normalize(phrase);
+      if (analysis.phrases.has(normalized)) {
+        matched.add(phrase);
+      }
+    });
+
+    const headMentioned = analysis.tokens.has('head');
+    const painIndicators = ['pain', 'ache', 'aches', 'hurt', 'hurts', 'hurting', 'pounding', 'pressure'];
+    const hasPainIndicator = painIndicators.some((indicator) => analysis.tokens.has(indicator));
+    if (headMentioned && hasPainIndicator) {
+      matched.add('head pain');
+    }
+
+    if (!matched.size) {
+      return null;
+    }
+
+    return Array.from(matched);
+  }
+
+  private expandHeadacheKeywords(contextKey: string, phrases: string[]): { tokenSet: Set<string>; phraseSet: Set<string> } {
+    const tokenSet = new Set<string>();
+    const phraseSet = new Set<string>();
+
+    const addPhrase = (phrase: string) => {
+      const normalized = this.normalize(phrase);
+      if (!normalized) {
+        return;
+      }
+      phraseSet.add(normalized);
+      normalized.split(' ').forEach((part) => {
+        if (part && !GENERIC_HEADACHE_TOKENS.has(part)) {
+          tokenSet.add(part);
+        }
+      });
+    };
+
+    addPhrase(contextKey);
+    phrases.forEach(addPhrase);
+
+    return { tokenSet, phraseSet };
+  }
+
+  private buildSpecificHeadacheMatch(viewpointId: string, matchedKeywords: string[]): AnatomyMatchResult | null {
+    const model = this.getModelById(HEADACHE_MODEL_ID);
+    const viewpoint = this.getViewpointInfo(HEADACHE_MODEL_ID, viewpointId);
+    if (!model || !viewpoint) {
+      return null;
+    }
+
+    return {
+      modelId: model.id,
+      modelName: model.name,
+      viewpointId: viewpoint.id,
+      viewpointName: viewpoint.name,
+      biodigitalUrl: model.biodigitalUrl,
+      viewpointUrl: viewpoint.biodigitalUrl,
+      viewpointCamera: viewpoint.camera,
+      score: 120,
+      matchedKeywords: matchedKeywords.length ? matchedKeywords : [viewpoint.name],
+      reason: `Showing ${viewpoint.name} pain pattern to match the described symptoms.`,
+    };
+  }
+
+  private buildGeneralHeadacheMatch(matchedKeywords: string[]): AnatomyMatchResult | null {
+    const model = this.getModelById(SKELETAL_MODEL_ID);
+    const viewpoint = this.getViewpointInfo(SKELETAL_MODEL_ID, SKELETAL_HEAD_VIEWPOINT_ID);
+    if (!model || !viewpoint) {
+      return null;
+    }
+
+    const keywords = matchedKeywords.length ? matchedKeywords : ['headache'];
+
+    return {
+      modelId: model.id,
+      modelName: model.name,
+      viewpointId: viewpoint.id,
+      viewpointName: viewpoint.name,
+      biodigitalUrl: model.biodigitalUrl,
+      viewpointUrl: viewpoint.biodigitalUrl,
+      viewpointCamera: viewpoint.camera,
+      score: 110,
+      matchedKeywords: keywords,
+      reason: 'Centered on the skull to ground the headache discussion.',
+    };
   }
 
   private analyzeQuery(query: string): QueryAnalysis {
@@ -471,6 +720,15 @@ export class AnatomyNavigator {
     return score;
   }
 
+  private scoreIdentifier(analysis: QueryAnalysis, identifier: string | undefined, weight: number, matches: string[]): number {
+    if (!identifier) {
+      return 0;
+    }
+
+    const formatted = identifier.replace(/[_-]+/g, ' ');
+    return this.scoreText(analysis, formatted, weight, matches);
+  }
+
   private directionalBoost(analysis: QueryAnalysis, viewpointId: string, matches: string[]): number {
     let boost = 0;
 
@@ -500,6 +758,15 @@ export class AnatomyNavigator {
     }
 
     return boost;
+  }
+
+  private getDefaultViewId(model: AnatomyModel): string | null {
+    const candidate = model.aiContext?.default_view;
+    if (candidate && model.viewpoints.some((view) => view.id === candidate)) {
+      return candidate;
+    }
+
+    return model.viewpoints[0]?.id ?? null;
   }
 
   private flattenRecordValues(record: Record<string, any>): string[] {

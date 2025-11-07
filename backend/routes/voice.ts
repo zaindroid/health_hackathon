@@ -50,6 +50,8 @@ export class VoiceSessionHandler {
 
     console.log(`🎙️  New voice session: ${sessionId}`);
     this.setupHandlers();
+    this.sendViewerCatalog();
+    this.sendDefaultViewerState();
   }
 
   /**
@@ -133,6 +135,9 @@ export class VoiceSessionHandler {
         type: 'status',
         status: 'session_started',
       });
+
+      this.sendViewerCatalog();
+      this.sendDefaultViewerState();
 
       // Send initial greeting ONCE when session starts
       this.sendMessage({
@@ -222,6 +227,8 @@ export class VoiceSessionHandler {
       const viewerMeta = this.buildViewerMeta(llmResponse.tool_action, navigationResolution.suggestion);
       if (viewerMeta && this.shouldSendViewerModel(viewerMeta)) {
         this.sendViewerModelUpdate(viewerMeta, navigationResolution.applied);
+      } else if (!viewerMeta && this.shouldSendViewerModel(null)) {
+        this.sendViewerModelUpdate(null, false);
       }
 
       // Only generate/send server-side audio when configured for external TTS
@@ -306,17 +313,20 @@ export class VoiceSessionHandler {
       const params = { ...(existing.params || {}) };
       let target = existing.target;
 
-      if (!params.model_id) {
+      const currentModelId = params.model_id ? String(params.model_id) : undefined;
+      if (!currentModelId || currentModelId !== suggestion.modelId) {
         params.model_id = suggestion.modelId;
         params.auto_filled = true;
-        params.reason = params.reason || suggestion.reason;
-        params.matched_terms = params.matched_terms || suggestion.matchedKeywords;
+        params.reason = suggestion.reason;
+        params.matched_terms = suggestion.matchedKeywords;
         applied = true;
       }
 
-      if (!target && existing.op === 'navigate') {
-        target = suggestion.viewpointId;
-        applied = true;
+      if (existing.op === 'navigate') {
+        if (!target || target !== suggestion.viewpointId) {
+          target = suggestion.viewpointId;
+          applied = true;
+        }
       }
 
       updatedAction = { ...existing, target, params };
@@ -366,6 +376,8 @@ export class VoiceSessionHandler {
       biodigitalUrl: modelInfo.biodigitalUrl,
       viewpointId,
       viewpointName: viewpointInfo.name,
+      viewpointUrl: viewpointInfo.biodigitalUrl,
+      viewpointCamera: viewpointInfo.camera,
       score: suggestion?.score ?? 0,
       matchedKeywords: suggestion?.matchedKeywords ?? [],
       reason: suggestion?.reason ?? `Showing ${viewpointInfo.name} in ${modelInfo.name}.`,
@@ -410,22 +422,45 @@ export class VoiceSessionHandler {
     }
   }
 
-  private shouldSendViewerModel(meta: AnatomyMatchResult): boolean {
+  private shouldSendViewerModel(meta: AnatomyMatchResult | null): boolean {
+    if (!meta) {
+      return this.loadedModelId !== null || this.loadedViewpointId !== null;
+    }
     return meta.modelId !== this.loadedModelId || meta.viewpointId !== this.loadedViewpointId;
   }
 
-  private sendViewerModelUpdate(meta: AnatomyMatchResult, autoSelected: boolean): void {
+  private sendViewerModelUpdate(meta: AnatomyMatchResult | null, autoSelected: boolean): void {
+    if (!meta) {
+      this.sendMessage({
+        type: 'viewer_model',
+        viewerModel: {
+          modelId: this.loadedModelId || '',
+          modelName: '',
+          biodigitalUrl: '',
+          visible: false,
+        },
+      });
+
+      this.loadedModelId = null;
+      this.loadedViewpointId = null;
+      console.log('📡 Viewer hidden (no relevant anatomy detected)');
+      return;
+    }
+
     this.sendMessage({
       type: 'viewer_model',
       viewerModel: {
         modelId: meta.modelId,
         modelName: meta.modelName,
         biodigitalUrl: meta.biodigitalUrl,
+  viewpointUrl: meta.viewpointUrl,
         viewpointId: meta.viewpointId,
         viewpointName: meta.viewpointName,
+        camera: meta.viewpointCamera,
         autoSelected,
         reason: meta.reason,
         matchedTerms: meta.matchedKeywords,
+        visible: true,
       },
     });
 
@@ -433,6 +468,33 @@ export class VoiceSessionHandler {
     this.loadedViewpointId = meta.viewpointId;
     this.anatomyNavigator.setCurrentModel(meta.modelId);
     console.log(`📡 Viewer update dispatched: ${meta.modelName} → ${meta.viewpointName}`);
+  }
+
+  private sendViewerCatalog(): void {
+    const catalog = this.anatomyNavigator.getModelCatalog();
+    if (!catalog.length) {
+      return;
+    }
+
+    this.sendMessage({
+      type: 'viewer_catalog',
+      viewerCatalog: {
+        models: catalog,
+      },
+    });
+  }
+
+  private sendDefaultViewerState(): void {
+    const defaultMatch = this.anatomyNavigator.getDefaultMatch();
+    if (!defaultMatch) {
+      return;
+    }
+
+    if (!this.shouldSendViewerModel(defaultMatch)) {
+      return;
+    }
+
+    this.sendViewerModelUpdate(defaultMatch, false);
   }
 
   /**

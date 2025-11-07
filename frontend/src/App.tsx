@@ -9,14 +9,11 @@ import './App.css';
 
 function App() {
   return (
-    <div className="app" style={{ display: 'flex', height: '100vh', width: '100vw' }}>
-      {/* Left Side: 3D Anatomy Viewer */}
-      <div style={{ flex: 2, height: '100%', padding: '1rem' }}>
+    <div className="app">
+      <div className="viewer-pane">
         <BioDigitalViewer />
       </div>
-
-      {/* Right Side: Voice Interface */}
-      <div style={{ flex: 1, height: '100%', borderLeft: '1px solid #e5e7eb' }}>
+      <div className="interface-pane">
         <VoiceInterface />
       </div>
     </div>
