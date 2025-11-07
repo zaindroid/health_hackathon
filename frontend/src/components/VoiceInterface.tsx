@@ -36,19 +36,9 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
   // Don't auto-start - user must click "Start Talking" button
   // Removed auto-start recording
 
-  // Transition to main interface after first user interaction
-  // ONLY if user has actually spoken (finalTranscripts exist)
-  useEffect(() => {
-    const userHasSpoken = finalTranscripts.length > 0;
-
-    if (isInitialGreeting && llmResponse && userHasSpoken && onConversationStarted) {
-      // User has spoken AND received a response - transition after a delay
-      const timer = setTimeout(() => {
-        onConversationStarted();
-      }, 3000); // Give user 3 seconds to see the response
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialGreeting, llmResponse, finalTranscripts.length, onConversationStarted]);
+  // DON'T auto-transition to main interface
+  // User wants to stay on greeting screen (voice-only interface)
+  // Removed auto-transition logic
 
   // Get interim transcript (most recent)
   const interimTranscript = transcript.find((t) => !t.isFinal);
