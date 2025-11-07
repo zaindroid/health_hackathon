@@ -148,63 +148,77 @@ function App() {
     );
   }
 
+  // Main interface - Clean 3D anatomy view with subtle header
   return (
-    <div className="app" style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
-      {/* Header - Minimal, no tabs (voice-controlled navigation) */}
+    <div className="app" style={{
+      height: '100vh',
+      width: '100vw',
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: '#f5f5f5',
+      transition: 'opacity 0.5s ease-in-out'
+    }}>
+      {/* Minimal Header - matches greeting screen style */}
       <header style={{
         backgroundColor: '#1e40af',
         color: '#fff',
-        padding: '15px 30px',
+        padding: '20px 30px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
       }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
-            🏥 Health Helper
-          </h1>
-          <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>
-            {sessionInfo.role === 'patient' ? '👤 Patient' : '👨‍⚕️ Doctor'} Session
-            {sessionInfo.useCase && ` • ${sessionInfo.useCase}`}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+              🏥 Health Helper
+            </h1>
+            <p style={{ margin: '8px 0 0 0', fontSize: '14px', opacity: 0.9 }}>
+              Voice-Powered Health Assistant
+            </p>
           </div>
+
+          {/* End Session Button - minimal */}
+          <button
+            onClick={handleEndSession}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            End Session
+          </button>
         </div>
-        <button
-          onClick={handleEndSession}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-          }}
-        >
-          End Session
-        </button>
       </header>
 
-      {/* Main Content Area - Voice + 3D Anatomy (no tabs) */}
-      <main style={{ flex: 1, overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
-        <div style={{ display: 'flex', height: '100%', width: '100%' }}>
-          {/* Left Side: 3D Anatomy Viewer */}
-          <div style={{ flex: 2, height: '100%', padding: '1rem' }}>
-            <BioDigitalViewer />
-          </div>
+      {/* Full-screen 3D Anatomy - Clean, no clutter */}
+      <main style={{
+        flex: 1,
+        overflow: 'hidden',
+        backgroundColor: '#f5f5f5',
+        position: 'relative'
+      }}>
+        {/* 3D Anatomy Model - Full Screen */}
+        <div style={{ height: '100%', width: '100%', padding: '1rem' }}>
+          <BioDigitalViewer />
+        </div>
 
-          {/* Right Side: Voice Interface */}
-          <div style={{ flex: 1, height: '100%', borderLeft: '1px solid #e5e7eb', backgroundColor: '#fff' }}>
-            <VoiceInterface sessionInfo={sessionInfo} />
-          </div>
+        {/* Hidden voice interface - runs in background */}
+        <div style={{ display: 'none' }}>
+          <VoiceInterface sessionInfo={sessionInfo} />
         </div>
       </main>
     </div>

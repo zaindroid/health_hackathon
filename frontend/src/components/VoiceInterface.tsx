@@ -36,9 +36,27 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
   // Don't auto-start - user must click "Start Talking" button
   // Removed auto-start recording
 
-  // DON'T auto-transition to main interface
-  // User wants to stay on greeting screen (voice-only interface)
-  // Removed auto-transition logic
+  // Smart transition: Only show 3D anatomy when user asks about it
+  useEffect(() => {
+    if (isInitialGreeting && llmResponse && onConversationStarted) {
+      // Check if response is about anatomy/3D visualization
+      const isAnatomyRequest =
+        llmResponse.tool_action?.op?.includes('show_') || // show_front, show_back, etc.
+        llmResponse.intent?.includes('anatomy') ||
+        llmResponse.intent?.includes('navigate') ||
+        llmResponse.utterance?.toLowerCase().includes('anatomy') ||
+        llmResponse.utterance?.toLowerCase().includes('showing') ||
+        llmResponse.utterance?.toLowerCase().includes('view');
+
+      if (isAnatomyRequest) {
+        // User asked about anatomy - transition to 3D view
+        const timer = setTimeout(() => {
+          onConversationStarted();
+        }, 1000); // Quick 1 second transition
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isInitialGreeting, llmResponse, onConversationStarted]);
 
   // Get interim transcript (most recent)
   const interimTranscript = transcript.find((t) => !t.isFinal);
