@@ -7,7 +7,7 @@
 
 import express, { Request, Response, Router } from 'express';
 import multer from 'multer';
-import pdfParse from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 import fs from 'fs';
 import sessionOrchestrator from '../services/sessionOrchestrator';
 import { kbRetriever } from '../rag/retriever_bedrock';
@@ -420,7 +420,9 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
 
     // Parse PDF
     const dataBuffer = await fs.promises.readFile(file.path);
-    const pdfData = await pdfParse(dataBuffer);
+    // pdf-parse is a CommonJS module, call it properly
+    const pdfParseFunc = (pdfParse as any).default || pdfParse;
+    const pdfData = await pdfParseFunc(dataBuffer);
     const text = pdfData.text;
 
     console.log(`✅ PDF parsed: ${text.length} characters extracted`);
