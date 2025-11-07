@@ -64,9 +64,43 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
   // Initial greeting mode - simplified UI
   if (isInitialGreeting) {
     return (
-      <div className="voice-interface" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', alignItems: 'center', padding: '40px' }}>
+      <div className="voice-interface" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', alignItems: 'center', padding: '40px', position: 'relative' }}>
+        {/* End Session Button - Top Right */}
+        <button
+          onClick={() => {
+            if (window.confirm('Are you sure you want to end this session?')) {
+              window.location.reload();
+            }
+          }}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            padding: '10px 20px',
+            backgroundColor: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#dc2626';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#ef4444';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          End Session
+        </button>
+
         {/* Welcoming header */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
           <h1 style={{ fontSize: '36px', marginBottom: '16px' }}>👋 Welcome!</h1>
           <p style={{ fontSize: '20px', color: '#666', marginBottom: '8px' }}>
             I'm your AI health assistant
@@ -76,72 +110,152 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           </p>
         </div>
 
-        {/* Recording indicator */}
-        {isRecording && (
+        {/* Microphone Animation - Visual indicator */}
+        <div style={{
+          position: 'relative',
+          marginBottom: '40px'
+        }}>
+          {/* Animated pulsing circles when listening */}
+          {isRecording && (
+            <>
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '140px',
+                height: '140px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                animation: 'pulse-ring 2s infinite'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '120px',
+                height: '120px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                animation: 'pulse-ring 2s infinite 0.5s'
+              }} />
+            </>
+          )}
+
+          {/* Microphone Icon */}
           <div style={{
-            padding: '20px 40px',
-            backgroundColor: '#eff6ff',
-            borderRadius: '12px',
-            border: '2px solid #3b82f6',
-            marginBottom: '30px',
-            animation: 'pulse 2s infinite'
+            position: 'relative',
+            width: '100px',
+            height: '100px',
+            borderRadius: '50%',
+            backgroundColor: isRecording ? '#3b82f6' : '#9ca3af',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            transition: 'all 0.3s'
           }}>
-            <div style={{ fontSize: '18px', color: '#1e40af', fontWeight: '500' }}>
-              🎤 Listening...
-            </div>
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
           </div>
-        )}
+        </div>
+
+        {/* Control Buttons */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '30px' }}>
+          {isRecording ? (
+            <button
+              onClick={stopRecording}
+              style={{
+                padding: '16px 32px',
+                fontSize: '18px',
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#d97706';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f59e0b';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              ⏸️ Pause
+            </button>
+          ) : (
+            <button
+              onClick={startRecording}
+              disabled={!isConnected}
+              style={{
+                padding: '16px 32px',
+                fontSize: '18px',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: isConnected ? 'pointer' : 'not-allowed',
+                opacity: isConnected ? 1 : 0.5,
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                if (isConnected) {
+                  e.currentTarget.style.backgroundColor = '#2563eb';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3b82f6';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              🎤 Start Talking
+            </button>
+          )}
+        </div>
 
         {/* Connection status */}
-        <div style={{ fontSize: '14px', color: isConnected ? '#10b981' : '#ef4444', marginBottom: '20px' }}>
-          {isConnected ? '🟢 Connected - Ready to listen' : '🔴 Connecting...'}
+        <div style={{ fontSize: '14px', color: isConnected ? '#10b981' : '#ef4444' }}>
+          {isConnected ? '🟢 Connected' : '🔴 Connecting...'}
         </div>
 
         {/* Error display */}
         {error && (
           <div style={{
+            marginTop: '20px',
             padding: '16px 24px',
             backgroundColor: '#fee2e2',
             color: '#991b1b',
             borderRadius: '8px',
-            marginBottom: '20px'
+            maxWidth: '500px'
           }}>
             ⚠️ {error}
           </div>
         )}
 
-        {/* Manual controls (if needed) */}
-        {!isRecording && (
-          <button
-            onClick={startRecording}
-            disabled={!isConnected}
-            style={{
-              marginTop: '30px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: isConnected ? 'pointer' : 'not-allowed',
-              opacity: isConnected ? 1 : 0.5,
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              if (isConnected) {
-                e.currentTarget.style.backgroundColor = '#2563eb';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3b82f6';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            🎤 Start Talking
-          </button>
-        )}
+        {/* Add CSS animation */}
+        <style>{`
+          @keyframes pulse-ring {
+            0% {
+              transform: translate(-50%, -50%) scale(0.8);
+              opacity: 1;
+            }
+            100% {
+              transform: translate(-50%, -50%) scale(1.3);
+              opacity: 0;
+            }
+          }
+        `}</style>
       </div>
     );
   }
