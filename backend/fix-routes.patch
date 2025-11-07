@@ -1,0 +1,20 @@
+--- a/routes/session.ts
++++ b/routes/session.ts
+@@ -53,7 +53,7 @@ router.post('/start', async (req: Request, res: Response) => {
+       useCase
+     );
+ 
+-    res.json({
++    return res.json({
+       success: true,
+       sessionId,
+       role: role || 'patient',
+@@ -62,7 +62,7 @@ router.post('/start', async (req: Request, res: Response) => {
+     });
+   } catch (error: any) {
+     console.error('❌ Error starting session:', error);
+-    res.status(500).json({
++    return res.status(500).json({
+       success: false,
+       error: error.message || 'Failed to start session'
+     });

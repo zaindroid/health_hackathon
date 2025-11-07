@@ -53,7 +53,7 @@ router.post('/start', async (req: Request, res: Response) => {
       useCase
     );
 
-    res.json({
+    return res.json({
       success: true,
       sessionId,
       role: role || 'patient',
@@ -62,7 +62,7 @@ router.post('/start', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('❌ Error starting session:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to start session'
     });
@@ -86,12 +86,12 @@ router.post('/vitals/consent', async (req: Request, res: Response) => {
 
     await sessionOrchestrator.recordVitalsConsent(sessionId);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Vitals consent recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record consent'
     });
@@ -115,12 +115,12 @@ router.post('/data/video', async (req: Request, res: Response) => {
 
     await sessionOrchestrator.addVideoAnalysis(sessionId, data);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Video analysis data recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record video data'
     });
@@ -154,10 +154,10 @@ router.post('/vitals/complete', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
     console.error('❌ Vitals complete error:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
@@ -178,12 +178,12 @@ router.post('/data/vital-displayed', async (req: Request, res: Response) => {
 
     await sessionOrchestrator.addVitalDisplayed(sessionId, metric);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Vital display recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record vital display'
     });
@@ -207,12 +207,12 @@ router.post('/data/symptom', async (req: Request, res: Response) => {
 
     await sessionOrchestrator.addSymptom(sessionId, symptom);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Symptom recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record symptom'
     });
@@ -242,12 +242,12 @@ router.post('/data/conversation', async (req: Request, res: Response) => {
       confidence
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Conversation turn recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record conversation'
     });
@@ -271,12 +271,12 @@ router.post('/data/anatomy', async (req: Request, res: Response) => {
 
     await sessionOrchestrator.addAnatomyInteraction(sessionId, interaction);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Anatomy interaction recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record interaction'
     });
@@ -300,12 +300,12 @@ router.post('/data/education', async (req: Request, res: Response) => {
 
     await sessionOrchestrator.addEducation(sessionId, content);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Education content recorded'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to record education'
     });
@@ -329,13 +329,13 @@ router.post('/end', async (req: Request, res: Response) => {
 
     const report = await sessionOrchestrator.endSession(sessionId);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Session ended successfully',
       report
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to end session'
     });
@@ -354,7 +354,7 @@ router.get('/:sessionId/status', async (req: Request, res: Response) => {
     const activeSession = sessionOrchestrator.getActiveSession(sessionId);
 
     if (activeSession) {
-      res.json({
+      return res.json({
         success: true,
         session: {
           sessionId: activeSession.sessionId,
@@ -374,7 +374,7 @@ router.get('/:sessionId/status', async (req: Request, res: Response) => {
       const dbSession = sessionOrchestrator.getSessionFromDb(sessionId);
 
       if (dbSession) {
-        res.json({
+        return res.json({
           success: true,
           session: {
             sessionId: dbSession.id,
@@ -387,14 +387,14 @@ router.get('/:sessionId/status', async (req: Request, res: Response) => {
           }
         });
       } else {
-        res.status(404).json({
+        return res.status(404).json({
           success: false,
           error: 'Session not found'
         });
       }
     }
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to get session status'
     });
@@ -409,7 +409,7 @@ router.get('/active', async (req: Request, res: Response) => {
   try {
     const sessions = sessionOrchestrator.getAllActiveSessions();
 
-    res.json({
+    return res.json({
       success: true,
       count: sessions.length,
       sessions: sessions.map(s => ({
@@ -422,7 +422,7 @@ router.get('/active', async (req: Request, res: Response) => {
       }))
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to get active sessions'
     });
@@ -537,7 +537,7 @@ Be specific with numbers and ranges. Say NORMAL or ABNORMAL clearly.`;
     // Clean up uploaded file
     await fs.promises.unlink(file.path);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Report analyzed successfully',
       analysis,
@@ -549,7 +549,7 @@ Be specific with numbers and ranges. Say NORMAL or ABNORMAL clearly.`;
     });
   } catch (error: any) {
     console.error('❌ Report upload error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to process report'
     });
@@ -566,13 +566,13 @@ router.get('/:sessionId/combined-analysis', async (req: Request, res: Response) 
 
     const analysis = await sessionOrchestrator.generateCombinedAnalysis(sessionId);
 
-    res.json({
+    return res.json({
       success: true,
       analysis
     });
   } catch (error: any) {
     console.error('❌ Combined analysis error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to generate combined analysis'
     });
