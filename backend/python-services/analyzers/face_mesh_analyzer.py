@@ -222,8 +222,16 @@ class FaceMeshAnalyzer:
         if len(sclera_pixels) == 0:
             return 0.0
 
+        # Ensure we have BGR channels
+        if len(sclera_pixels.shape) == 1 or sclera_pixels.shape[-1] != 3:
+            # Invalid pixel data
+            return 0.0
+
         # Analyze redness (red channel dominance)
-        b, g, r = cv2.split(sclera_pixels.reshape(-1, 3))
+        # sclera_pixels is already (N, 3) shape after masking
+        b = sclera_pixels[:, 0]
+        g = sclera_pixels[:, 1]
+        r = sclera_pixels[:, 2]
 
         # Redness score: high R, low G/B
         redness = (np.mean(r) - np.mean(g)) / 255.0
@@ -251,7 +259,12 @@ class FaceMeshAnalyzer:
         if len(sclera_pixels) == 0:
             return 0.0
 
+        # Ensure we have BGR channels
+        if len(sclera_pixels.shape) == 1 or sclera_pixels.shape[-1] != 3:
+            return 0.0
+
         # Convert to LAB color space (better for yellow detection)
+        # sclera_pixels is already (N, 3) shape, reshape to (N, 1, 3) for cvtColor
         sclera_lab = cv2.cvtColor(sclera_pixels.reshape(-1, 1, 3), cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(sclera_lab)
 
@@ -379,6 +392,10 @@ class FaceMeshAnalyzer:
         if len(face_pixels) == 0:
             return 0.0
 
+        # Ensure we have BGR channels
+        if len(face_pixels.shape) == 1 or face_pixels.shape[-1] != 3:
+            return 0.0
+
         # Convert to LAB
         face_lab = cv2.cvtColor(face_pixels.reshape(-1, 1, 3), cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(face_lab)
@@ -413,8 +430,14 @@ class FaceMeshAnalyzer:
         if len(lip_pixels) == 0:
             return False
 
+        # Ensure we have BGR channels
+        if len(lip_pixels.shape) == 1 or lip_pixels.shape[-1] != 3:
+            return False
+
         # Analyze blue channel dominance
-        b, g, r = cv2.split(lip_pixels.reshape(-1, 3))
+        b = lip_pixels[:, 0]
+        g = lip_pixels[:, 1]
+        r = lip_pixels[:, 2]
 
         # Cyanosis: blue > red
         blue_dominance = np.mean(b) - np.mean(r)

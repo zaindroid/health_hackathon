@@ -102,6 +102,9 @@ export const MedicalScanner: React.FC<MedicalScannerProps> = ({
 
     if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return;
 
+    // Ensure video has valid dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) return;
+
     // Set canvas size
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -111,6 +114,12 @@ export const MedicalScanner: React.FC<MedicalScannerProps> = ({
 
     // Get base64 image
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+    // Verify we have valid image data (not empty)
+    if (!imageData || imageData.length < 100) {
+      console.warn('⚠️  Invalid image data, skipping frame');
+      return;
+    }
 
     // Analyze with Python service
     await analyzeFrame(imageData);
@@ -131,73 +140,85 @@ export const MedicalScanner: React.FC<MedicalScannerProps> = ({
 
     if (!ctx) return;
 
-    // Match canvas size to video
-    overlay.width = video.videoWidth;
-    overlay.height = video.videoHeight;
+    // Get displayed video size
+    const displayWidth = video.clientWidth;
+    const displayHeight = video.clientHeight;
+
+    // Get actual video resolution
+    const videoWidth = video.videoWidth || displayWidth;
+    const videoHeight = video.videoHeight || displayHeight;
+
+    // Set canvas to match displayed size
+    overlay.width = displayWidth;
+    overlay.height = displayHeight;
+
+    // Calculate scale factors
+    const scaleX = displayWidth / videoWidth;
+    const scaleY = displayHeight / videoHeight;
 
     // Clear previous frame
     ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-    // Draw face mesh points
+    // Draw face mesh points with scaling
     ctx.fillStyle = '#00ff00';
     landmarks.forEach((point) => {
       ctx.beginPath();
-      ctx.arc(point.x, point.y, 1, 0, 2 * Math.PI);
+      ctx.arc(point.x * scaleX, point.y * scaleY, 2, 0, 2 * Math.PI);
       ctx.fill();
     });
 
-    // Draw iris circles (pupils)
+    // Draw iris circles (pupils) with scaling
     if (eyeMetrics) {
       // Left iris
       const leftIris = landmarks.slice(474, 478);
       if (leftIris.length > 0) {
         const centerLeft = {
-          x: leftIris.reduce((sum, p) => sum + p.x, 0) / leftIris.length,
-          y: leftIris.reduce((sum, p) => sum + p.y, 0) / leftIris.length,
+          x: (leftIris.reduce((sum, p) => sum + p.x, 0) / leftIris.length) * scaleX,
+          y: (leftIris.reduce((sum, p) => sum + p.y, 0) / leftIris.length) * scaleY,
         };
 
         ctx.strokeStyle = eyeMetrics.pupil_asymmetry_alert ? '#ff0000' : '#00ffff';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(centerLeft.x, centerLeft.y, 20, 0, 2 * Math.PI);
+        ctx.arc(centerLeft.x, centerLeft.y, 20 * scaleX, 0, 2 * Math.PI);
         ctx.stroke();
 
         // Pupil size label
         ctx.fillStyle = '#00ffff';
-        ctx.font = '12px monospace';
-        ctx.fillText(`${eyeMetrics.pupil_diameter_left}mm`, centerLeft.x + 25, centerLeft.y);
+        ctx.font = '14px monospace';
+        ctx.fillText(`${eyeMetrics.pupil_diameter_left}mm`, centerLeft.x + 25 * scaleX, centerLeft.y);
       }
 
       // Right iris
       const rightIris = landmarks.slice(469, 473);
       if (rightIris.length > 0) {
         const centerRight = {
-          x: rightIris.reduce((sum, p) => sum + p.x, 0) / rightIris.length,
-          y: rightIris.reduce((sum, p) => sum + p.y, 0) / rightIris.length,
+          x: (rightIris.reduce((sum, p) => sum + p.x, 0) / rightIris.length) * scaleX,
+          y: (rightIris.reduce((sum, p) => sum + p.y, 0) / rightIris.length) * scaleY,
         };
 
         ctx.strokeStyle = eyeMetrics.pupil_asymmetry_alert ? '#ff0000' : '#00ffff';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(centerRight.x, centerRight.y, 20, 0, 2 * Math.PI);
+        ctx.arc(centerRight.x, centerRight.y, 20 * scaleX, 0, 2 * Math.PI);
         ctx.stroke();
 
         // Pupil size label
         ctx.fillStyle = '#00ffff';
-        ctx.font = '12px monospace';
-        ctx.fillText(`${eyeMetrics.pupil_diameter_right}mm`, centerRight.x + 25, centerRight.y);
+        ctx.font = '14px monospace';
+        ctx.fillText(`${eyeMetrics.pupil_diameter_right}mm`, centerRight.x + 25 * scaleX, centerRight.y);
       }
     }
 
-    // Draw face oval
+    // Draw face oval with scaling
     const faceOval = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323];
     if (faceOval.every(i => i < landmarks.length)) {
       ctx.strokeStyle = faceDetected ? '#00ff00' : '#ff0000';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(landmarks[faceOval[0]].x, landmarks[faceOval[0]].y);
+      ctx.moveTo(landmarks[faceOval[0]].x * scaleX, landmarks[faceOval[0]].y * scaleY);
       faceOval.forEach(i => {
-        ctx.lineTo(landmarks[i].x, landmarks[i].y);
+        ctx.lineTo(landmarks[i].x * scaleX, landmarks[i].y * scaleY);
       });
       ctx.closePath();
       ctx.stroke();

@@ -106,7 +106,15 @@ export function useMedicalScanner(): UseMedicalScannerResult {
       });
 
       if (!response.ok) {
-        throw new Error(`Analysis failed: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+        const errorMessage = errorData.detail || response.statusText;
+
+        // Only log full error on first occurrence, suppress repetitive errors
+        if (!error || error !== errorMessage) {
+          console.error('❌ Analysis error:', errorMessage);
+        }
+
+        throw new Error(errorMessage);
       }
 
       const result: AnalysisResult = await response.json();
@@ -122,12 +130,16 @@ export function useMedicalScanner(): UseMedicalScannerResult {
       setVoiceGuidance(result.voice_guidance);
 
     } catch (err) {
-      console.error('❌ Analysis error:', err);
-      setError(err instanceof Error ? err.message : 'Analysis failed');
+      const errorMessage = err instanceof Error ? err.message : 'Analysis failed';
+
+      // Only update error state if it's a new error to avoid excessive re-renders
+      if (error !== errorMessage) {
+        setError(errorMessage);
+      }
     } finally {
       setIsAnalyzing(false);
     }
-  }, []);
+  }, [error]);
 
   /**
    * Reset analyzer state

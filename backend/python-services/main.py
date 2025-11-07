@@ -258,7 +258,14 @@ async def analyze_frame(request: AnalysisRequest):
             voice_guidance=voice_guidance
         )
 
+    except HTTPException as e:
+        # Re-raise HTTP exceptions (like 400 from image decoding)
+        raise e
     except Exception as e:
+        # Log full traceback for debugging
+        import traceback
+        print(f"❌ Analysis exception: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 

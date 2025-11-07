@@ -24,6 +24,7 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
     connect,
     disconnect,
     sendFrame,
+    startMonitoring,
     stopMonitoring,
     heartRate,
     rppgSignal,
@@ -54,9 +55,12 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
       }
 
       console.log('✅ Webcam started');
+      return mediaStream;
     } catch (err) {
       console.error('❌ Failed to start webcam:', err);
-      alert('Failed to access webcam. Please grant camera permissions.');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to access webcam';
+      alert(`Failed to access webcam: ${errorMsg}\n\nPlease grant camera permissions and try again.`);
+      throw err; // Re-throw so handleStartRecording can catch it
     }
   };
 
@@ -105,21 +109,48 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
    */
   const handleStartRecording = async () => {
     try {
-      // Start webcam if not already started
-      if (!stream) {
-        await startWebcam();
+      console.log('📹 Starting recording...');
+
+      // Check if video element already has a stream
+      let activeStream = stream;
+
+      if (videoRef.current?.srcObject instanceof MediaStream) {
+        activeStream = videoRef.current.srcObject as MediaStream;
+        console.log('✅ Using existing video stream');
       }
 
+      // Start webcam if not already started
+      if (!activeStream || activeStream.getTracks().length === 0) {
+        console.log('📷 Starting webcam...');
+        activeStream = await startWebcam();
+        // Wait a bit for stream to be fully ready
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+
+      // Final verification
+      const tracks = activeStream?.getTracks() || [];
+      console.log(`📊 Stream status: ${tracks.length} tracks, active: ${tracks.some(t => t.enabled && t.readyState === 'live')}`);
+
+      if (tracks.length === 0 || !tracks.some(t => t.readyState === 'live')) {
+        throw new Error('Webcam stream is not active. Please grant camera permissions.');
+      }
+
+      console.log('🔌 Connecting to WebSocket...');
       // Connect to backend WebSocket
       await connect();
+
+      console.log('📤 Sending start message...');
+      // Send start message to initiate CAIRE connection
+      startMonitoring();
 
       // Start sending frames at 30 FPS
       setIsRecording(true);
 
-      console.log('📹 Recording started');
+      console.log('✅ Recording started successfully');
     } catch (err) {
       console.error('❌ Failed to start recording:', err);
-      alert('Failed to start recording');
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to start recording: ${errorMsg}`);
     }
   };
 
