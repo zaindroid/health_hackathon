@@ -135,8 +135,8 @@ function App() {
         </header>
 
         {/* Full-screen voice interface */}
-        <main style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ width: '100%', height: '100%', maxWidth: '800px', padding: '20px' }}>
+        <main style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'stretch' }}>
+          <div style={{ width: '100%', height: '100%', maxWidth: '800px', display: 'flex' }}>
             <VoiceInterface
               onSessionReady={handleStartSession}
               isInitialGreeting={true}

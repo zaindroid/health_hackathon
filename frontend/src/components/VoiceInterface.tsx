@@ -67,14 +67,14 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
       <div className="voice-interface" style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
-        maxHeight: '100vh',
+        height: '100%',
         width: '100%',
         justifyContent: 'space-evenly',
         alignItems: 'center',
         padding: 'clamp(10px, 2vh, 20px)',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxSizing: 'border-box'
       }}>
         {/* End Session Button - Top Right - Responsive */}
         <button
