@@ -22,6 +22,7 @@ export class VoiceSessionHandler {
   private ragRetriever: ReturnType<typeof getMedicalRetriever>;
   private ttsProvider: ReturnType<typeof getCartesiaProvider> | ReturnType<typeof getTTSProvider>;
   private isActive = false;
+  private greetingSent = false; // Track if greeting has been sent
 
   constructor(ws: WebSocket, sessionId: string) {
     this.ws = ws;
@@ -125,34 +126,38 @@ export class VoiceSessionHandler {
         status: 'session_started',
       });
 
-      // Send initial greeting ONCE when session starts
-      this.sendMessage({
-        type: 'llm_response',
-        llmResponse: {
-          utterance: 'Hello! Welcome to Health Helper. How may I help you today?',
-          intent: 'greeting',
-        },
-      });
+      // Send initial greeting ONLY once per WebSocket connection
+      if (!this.greetingSent) {
+        this.greetingSent = true;
 
-      // Generate greeting audio if using Cartesia
-      if (appConfig.ttsProvider === 'external' && this.ttsProvider.isConfigured()) {
-        try {
-          const greetingText = 'Hello! Welcome to Health Helper. How may I help you today?';
-          const audioBuffer = await this.ttsProvider.speak(greetingText);
+        this.sendMessage({
+          type: 'llm_response',
+          llmResponse: {
+            utterance: 'Hello! Welcome to Health Helper. How may I help you today?',
+            intent: 'greeting',
+          },
+        });
 
-          if (audioBuffer && Buffer.isBuffer(audioBuffer)) {
-            this.sendMessage({
-              type: 'audio',
-              audio: {
-                data: audioBuffer.toString('base64'),
-                format: 'pcm_s16le',
-                sampleRate: 24000,
-              },
-            });
-            console.log(`🔊 Greeting audio sent to client`);
+        // Generate greeting audio if using Cartesia
+        if (appConfig.ttsProvider === 'external' && this.ttsProvider.isConfigured()) {
+          try {
+            const greetingText = 'Hello! Welcome to Health Helper. How may I help you today?';
+            const audioBuffer = await this.ttsProvider.speak(greetingText);
+
+            if (audioBuffer && Buffer.isBuffer(audioBuffer)) {
+              this.sendMessage({
+                type: 'audio',
+                audio: {
+                  data: audioBuffer.toString('base64'),
+                  format: 'pcm_s16le',
+                  sampleRate: 24000,
+                },
+              });
+              console.log(`🔊 Greeting audio sent to client`);
+            }
+          } catch (error) {
+            console.error('❌ Error generating greeting audio:', error);
           }
-        } catch (error) {
-          console.error('❌ Error generating greeting audio:', error);
         }
       }
     } catch (error) {

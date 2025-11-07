@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { VoiceInterface } from './components/VoiceInterface';
 import { BioDigitalViewer } from './components/BioDigitalViewer';
+import { ReportUpload } from './components/ReportUpload';
 import './App.css';
 
 interface SessionInfo {
@@ -17,9 +18,11 @@ interface SessionInfo {
   useCase?: string;
 }
 
+type ScreenType = 'greeting' | 'report_upload' | 'anatomy' | 'education';
+
 function App() {
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
-  const [showMainInterface, setShowMainInterface] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('greeting');
 
   /**
    * Handle session start (called by voice bot after role detection)
@@ -61,12 +64,29 @@ function App() {
   // Removed auto-start - user must click "Start Talking" button
 
   /**
-   * Handle transition from greeting screen to main interface
-   * Called after user's first interaction with the voice bot
+   * Handle screen transition based on LLM intent
+   * Called when voice bot determines user's need
    */
-  const handleConversationStarted = () => {
-    console.log('🎤 User has interacted - showing main interface');
-    setShowMainInterface(true);
+  const handleScreenTransition = (intent: string) => {
+    console.log('🎤 Intent detected:', intent);
+
+    // Route to appropriate screen based on intent
+    switch (intent) {
+      case 'report_analysis':
+        setCurrentScreen('report_upload');
+        break;
+      case 'acute_diagnosis':
+        setCurrentScreen('anatomy');
+        break;
+      case 'medical_education':
+        setCurrentScreen('anatomy'); // Can add dedicated education screen later
+        break;
+      case 'vitals_check':
+        setCurrentScreen('anatomy'); // Video analysis on anatomy screen
+        break;
+      default:
+        console.log('⚠️  Unknown intent, staying on current screen');
+    }
   };
 
   /**
@@ -93,7 +113,7 @@ function App() {
         console.log('✅ Session ended:', data.report);
         alert('Session ended. Thank you!');
         setSessionInfo(null);
-        setShowMainInterface(false); // Return to greeting screen
+        setCurrentScreen('greeting'); // Return to greeting screen
       } else {
         console.error('❌ Failed to end session:', data.error);
       }
@@ -129,8 +149,8 @@ function App() {
             </p>
           </div>
 
-          {/* End Session Button - only show in main interface */}
-          {sessionInfo && showMainInterface && (
+          {/* End Session Button - show on all screens except greeting */}
+          {sessionInfo && currentScreen !== 'greeting' && (
             <button
               onClick={handleEndSession}
               style={{
@@ -176,25 +196,40 @@ function App() {
           left: 0,
           width: '100%',
           height: '100%',
-          display: (!sessionInfo || !showMainInterface) ? 'flex' : 'none',
+          display: currentScreen === 'greeting' ? 'flex' : 'none',
           justifyContent: 'center',
           alignItems: 'stretch',
-          zIndex: (!sessionInfo || !showMainInterface) ? 10 : 0
+          zIndex: currentScreen === 'greeting' ? 10 : 0
         }}>
           <div style={{ width: '100%', height: '100%', maxWidth: '800px', display: 'flex' }}>
             <VoiceInterface
               sessionInfo={sessionInfo ?? undefined}
               onSessionReady={handleStartSession}
-              isInitialGreeting={!sessionInfo || !showMainInterface}
-              onConversationStarted={handleConversationStarted}
+              isInitialGreeting={currentScreen === 'greeting'}
+              onScreenTransition={handleScreenTransition}
             />
           </div>
         </div>
 
-        {/* Main Interface - 3D Anatomy View (shown when conversation started) */}
-        {sessionInfo && showMainInterface && (
+        {/* Report Upload Screen */}
+        {currentScreen === 'report_upload' && (
+          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <ReportUpload />
+          </div>
+        )}
+
+        {/* Anatomy Screen - 3D Model */}
+        {currentScreen === 'anatomy' && (
           <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
-            {/* 3D Anatomy Model - Full Screen */}
+            <div style={{ height: '100%', width: '100%', padding: '1rem' }}>
+              <BioDigitalViewer />
+            </div>
+          </div>
+        )}
+
+        {/* Education Screen - Will be same as anatomy for now */}
+        {currentScreen === 'education' && (
+          <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
             <div style={{ height: '100%', width: '100%', padding: '1rem' }}>
               <BioDigitalViewer />
             </div>

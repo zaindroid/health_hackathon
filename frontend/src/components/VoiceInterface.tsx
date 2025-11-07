@@ -15,10 +15,10 @@ interface VoiceInterfaceProps {
   };
   onSessionReady?: (role: 'patient' | 'doctor', useCase?: string) => void;
   isInitialGreeting?: boolean;
-  onConversationStarted?: () => void; // Called after first LLM response
+  onScreenTransition?: (intent: string) => void; // Called with intent to transition screens
 }
 
-export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isInitialGreeting = false, onConversationStarted }: VoiceInterfaceProps) {
+export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isInitialGreeting = false, onScreenTransition }: VoiceInterfaceProps) {
   const {
     isConnected,
     isRecording,
@@ -36,27 +36,21 @@ export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isIn
   // Don't auto-start - user must click "Start Talking" button
   // Removed auto-start recording
 
-  // Smart transition: Only show 3D anatomy when user asks about it
+  // Smart screen transition based on LLM intent
   useEffect(() => {
-    if (isInitialGreeting && llmResponse && onConversationStarted) {
-      // Check if response is about anatomy/3D visualization
-      const isAnatomyRequest =
-        llmResponse.tool_action?.op?.includes('show_') || // show_front, show_back, etc.
-        llmResponse.intent?.includes('anatomy') ||
-        llmResponse.intent?.includes('navigate') ||
-        llmResponse.utterance?.toLowerCase().includes('anatomy') ||
-        llmResponse.utterance?.toLowerCase().includes('showing') ||
-        llmResponse.utterance?.toLowerCase().includes('view');
+    if (isInitialGreeting && llmResponse && onScreenTransition) {
+      const intent = llmResponse.intent;
 
-      if (isAnatomyRequest) {
-        // User asked about anatomy - transition to 3D view
+      // Transition to appropriate screen based on intent
+      if (intent && intent !== 'greeting' && intent !== 'general_help') {
+        console.log('🔀 Transitioning to screen for intent:', intent);
         const timer = setTimeout(() => {
-          onConversationStarted();
-        }, 1000); // Quick 1 second transition
+          onScreenTransition(intent);
+        }, 500); // Quick transition
         return () => clearTimeout(timer);
       }
     }
-  }, [isInitialGreeting, llmResponse, onConversationStarted]);
+  }, [isInitialGreeting, llmResponse, onScreenTransition]);
 
   // Get interim transcript (most recent)
   const interimTranscript = transcript.find((t) => !t.isFinal);
