@@ -10,6 +10,7 @@ import { createServer, Server as HTTPServer } from 'http';
 import { v4 as uuidv4 } from 'uuid';
 import { serverConfig, printConfig, checkConfiguration } from './config/env';
 import { VoiceSessionHandler } from './routes/voice';
+import { VideoHealthHandler } from './routes/video-health';
 import { testLLMProvider } from './llm';
 
 class VoiceAgentServer {
@@ -103,27 +104,39 @@ class VoiceAgentServer {
   }
 
   /**
-   * Set up WebSocket server for voice interaction
+   * Set up WebSocket server for voice interaction and video health
    */
   private setupWebSocket(): void {
     this.wss.on('connection', (ws: WebSocket, req) => {
       const sessionId = uuidv4();
+      const path = req.url?.split('?')[0] || '/';
+
       console.log(`\n🔌 New WebSocket connection: ${sessionId}`);
-      console.log(`   Path: ${req.url}`);
+      console.log(`   Path: ${path}`);
       console.log(`   Active sessions: ${this.activeSessions.size + 1}`);
 
-      // Create voice session handler
-      const handler = new VoiceSessionHandler(ws, sessionId);
-      this.activeSessions.set(sessionId, handler);
+      // Route to appropriate handler based on path
+      if (path === '/video-health' || path === '/video-health/') {
+        // Video health monitoring handler
+        const handler = new VideoHealthHandler(ws, sessionId);
+        // Note: VideoHealthHandler manages its own lifecycle
+        console.log(`📹 Video health session created: ${sessionId}`);
+      } else {
+        // Default: Voice session handler
+        const handler = new VoiceSessionHandler(ws, sessionId);
+        this.activeSessions.set(sessionId, handler);
 
-      // Clean up on disconnect
-      ws.on('close', () => {
-        this.activeSessions.delete(sessionId);
-        console.log(`📊 Active sessions: ${this.activeSessions.size}`);
-      });
+        // Clean up on disconnect
+        ws.on('close', () => {
+          this.activeSessions.delete(sessionId);
+          console.log(`📊 Active sessions: ${this.activeSessions.size}`);
+        });
+      }
     });
 
     console.log('✅ WebSocket server configured');
+    console.log('   - Voice Agent: ws://HOST:PORT/');
+    console.log('   - Video Health: ws://HOST:PORT/video-health');
   }
 
   /**

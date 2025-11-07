@@ -273,26 +273,6 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
   };
 
   /**
-   * Speak text using Web Speech API (fallback)
-   */
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      console.log('🔊 Speaking:', text);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      console.warn('⚠️  Speech synthesis not supported');
-    }
-  };
-
-  /**
    * Play audio from Cartesia (PCM data)
    */
   const playCartesiaAudio = async (audioData: { data: string; format: string; sampleRate: number }) => {

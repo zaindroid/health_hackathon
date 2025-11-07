@@ -48,7 +48,7 @@ export interface TranscriptEvent {
 
 export interface TTSProvider {
   name: string;
-  speak(text: string): Promise<void | Buffer>;
+  speak(text: string): Promise<void | any>; // Returns void or Buffer (Node.js)
   stop(): void;
   isConfigured(): boolean;
 }
@@ -157,4 +157,45 @@ export interface BedrockConfig {
 export interface OpenAIConfig {
   apiKey: string;
   model?: string;
+}
+
+// ============================================================================
+// Video Health Monitoring Types (CAIRE API)
+// ============================================================================
+
+export interface VideoHealthConfig {
+  apiKey: string;
+  wsUrl: string;
+}
+
+export interface VideoFramePayload {
+  datapt_id: string;
+  state: 'stream' | 'end';
+  frame_data: string; // base64 JPEG (no prefix)
+  timestamp: string; // UNIX timestamp as string
+  advanced: boolean; // true to get rPPG signals
+}
+
+export interface VideoHealthResponse {
+  state: 'ok' | 'finished';
+  socket_id: string;
+  datapt_id: string;
+  inference: {
+    hr?: number; // Heart rate in BPM
+  };
+  advanced?: {
+    rppg?: number[]; // rPPG signal array
+    rppg_timestamps?: number[]; // Timestamps for each rPPG sample
+  } | null;
+  confidence?: Record<string, any>;
+  feedback?: string | null;
+  model_version?: string;
+}
+
+export interface VideoHealthMetrics {
+  heartRate?: number;
+  rppgSignal?: number[];
+  rppgTimestamps?: number[];
+  timestamp: number;
+  confidence?: number;
 }

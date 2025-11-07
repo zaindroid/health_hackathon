@@ -1,0 +1,2 @@
+here is your api key: _gskosjmOYnzNJ_4bieNyGrJZrbpmLuYfscfFZdOHZA
+and please adjust the url in client code to this: ws://3.67.186.245:8003/ws/
