@@ -67,13 +67,14 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
       <div className="voice-interface" style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        height: '100vh',
+        maxHeight: '100vh',
         width: '100%',
-        justifyContent: 'space-between',
+        justifyContent: 'space-evenly',
         alignItems: 'center',
-        padding: 'clamp(20px, 5vw, 40px)',
+        padding: 'clamp(10px, 2vh, 20px)',
         position: 'relative',
-        minHeight: '100vh'
+        overflow: 'hidden'
       }}>
         {/* End Session Button - Top Right - Responsive */}
         <button
@@ -115,28 +116,29 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           textAlign: 'center',
           width: '100%',
           maxWidth: '800px',
-          paddingTop: 'clamp(40px, 10vh, 80px)'
+          paddingTop: 'clamp(20px, 5vh, 40px)',
+          flexShrink: 0
         }}>
           <h1 style={{
-            fontSize: 'clamp(28px, 6vw, 48px)',
-            marginBottom: 'clamp(12px, 3vh, 20px)',
+            fontSize: 'clamp(24px, 5vw, 40px)',
+            marginBottom: 'clamp(8px, 2vh, 12px)',
             fontWeight: 'bold',
             color: '#1e293b'
           }}>
             👋 Welcome!
           </h1>
           <p style={{
-            fontSize: 'clamp(16px, 3vw, 24px)',
+            fontSize: 'clamp(14px, 2.5vw, 20px)',
             color: '#64748b',
-            marginBottom: 'clamp(6px, 2vh, 12px)',
-            lineHeight: '1.4'
+            marginBottom: 'clamp(4px, 1vh, 8px)',
+            lineHeight: '1.3'
           }}>
             I'm your AI health assistant
           </p>
           <p style={{
-            fontSize: 'clamp(14px, 2.5vw, 18px)',
+            fontSize: 'clamp(12px, 2vw, 16px)',
             color: '#94a3b8',
-            lineHeight: '1.4'
+            lineHeight: '1.3'
           }}>
             How may I help you today?
           </p>
@@ -148,9 +150,11 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          flex: 1,
+          flex: '0 1 auto',
           width: '100%',
-          position: 'relative'
+          position: 'relative',
+          minHeight: '0',
+          padding: 'clamp(10px, 3vh, 30px) 0'
         }}>
           {/* Animated pulsing circles when listening - Responsive */}
           {isRecording && (
@@ -160,8 +164,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 'clamp(200px, 40vw, 400px)',
-                height: 'clamp(200px, 40vw, 400px)',
+                width: 'clamp(140px, 30vmin, 300px)',
+                height: 'clamp(140px, 30vmin, 300px)',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(59, 130, 246, 0.05)',
                 animation: 'pulse-ring 2s infinite'
@@ -171,8 +175,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 'clamp(160px, 35vw, 350px)',
-                height: 'clamp(160px, 35vw, 350px)',
+                width: 'clamp(120px, 25vmin, 260px)',
+                height: 'clamp(120px, 25vmin, 260px)',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 animation: 'pulse-ring 2s infinite 0.5s'
@@ -182,8 +186,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 'clamp(120px, 30vw, 300px)',
-                height: 'clamp(120px, 30vw, 300px)',
+                width: 'clamp(100px, 20vmin, 220px)',
+                height: 'clamp(100px, 20vmin, 220px)',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(59, 130, 246, 0.15)',
                 animation: 'pulse-ring 2s infinite 1s'
@@ -194,8 +198,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           {/* Large Microphone Icon - Responsive */}
           <div style={{
             position: 'relative',
-            width: 'clamp(120px, 25vw, 250px)',
-            height: 'clamp(120px, 25vw, 250px)',
+            width: 'clamp(100px, 20vmin, 200px)',
+            height: 'clamp(100px, 20vmin, 200px)',
             borderRadius: '50%',
             backgroundColor: isRecording ? '#3b82f6' : '#94a3b8',
             display: 'flex',
@@ -208,8 +212,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
             zIndex: 1
           }}>
             <svg
-              width="clamp(60px, 12vw, 120px)"
-              height="clamp(60px, 12vw, 120px)"
+              width="clamp(50px, 10vmin, 100px)"
+              height="clamp(50px, 10vmin, 100px)"
               viewBox="0 0 24 24"
               fill="white"
             >
@@ -224,18 +228,19 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 'clamp(16px, 3vh, 24px)',
+          gap: 'clamp(12px, 2vh, 16px)',
           width: '100%',
-          maxWidth: '500px',
-          paddingBottom: 'clamp(20px, 5vh, 40px)'
+          maxWidth: '400px',
+          paddingBottom: 'clamp(15px, 3vh, 25px)',
+          flexShrink: 0
         }}>
           {/* Control Button - Responsive */}
           {isRecording ? (
             <button
               onClick={stopRecording}
               style={{
-                padding: 'clamp(14px, 3vw, 18px) clamp(28px, 6vw, 40px)',
-                fontSize: 'clamp(16px, 3vw, 20px)',
+                padding: 'clamp(12px, 2.5vh, 16px) clamp(24px, 5vw, 32px)',
+                fontSize: 'clamp(14px, 2.5vw, 18px)',
                 backgroundColor: '#f59e0b',
                 color: 'white',
                 border: 'none',
@@ -270,8 +275,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
               }}
               disabled={!isConnected}
               style={{
-                padding: 'clamp(14px, 3vw, 18px) clamp(28px, 6vw, 40px)',
-                fontSize: 'clamp(16px, 3vw, 20px)',
+                padding: 'clamp(12px, 2.5vh, 16px) clamp(24px, 5vw, 32px)',
+                fontSize: 'clamp(14px, 2.5vw, 18px)',
                 backgroundColor: '#3b82f6',
                 color: 'white',
                 border: 'none',
