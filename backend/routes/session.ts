@@ -12,8 +12,8 @@ import sessionOrchestrator from '../services/sessionOrchestrator';
 import { kbRetriever } from '../rag/retriever_bedrock';
 import { getLLMProvider } from '../llm';
 
-// pdf-parse is a CommonJS module, use require
-const pdfParse = require('pdf-parse');
+// pdf-parse exports a named function PDFParse
+const { PDFParse } = require('pdf-parse');
 
 const router: Router = express.Router();
 
@@ -420,9 +420,9 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
 
     console.log(`📄 Processing PDF upload: ${file.originalname}`);
 
-    // Parse PDF
+    // Parse PDF - use PDFParse function from pdf-parse module
     const dataBuffer = await fs.promises.readFile(file.path);
-    const pdfData = await pdfParse(dataBuffer);
+    const pdfData = await PDFParse(dataBuffer);
     const text = pdfData.text;
 
     console.log(`✅ PDF parsed: ${text.length} characters extracted`);
