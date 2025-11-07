@@ -27,7 +27,7 @@ function validateEnv(key: string, required: boolean = true): string | undefined 
  */
 export const appConfig: AppConfig = {
   llmProvider: (process.env.LLM_PROVIDER as any) || 'bedrock',
-  sttProvider: 'deepgram',
+  sttProvider: (process.env.STT_PROVIDER as any) || 'deepgram',
   ttsProvider: (process.env.TTS_PROVIDER as any) || 'webspeech',
   enableRAG: process.env.ENABLE_RAG === 'true',
   enableTools: process.env.ENABLE_TOOLS === 'true',
@@ -81,9 +81,22 @@ export const serverConfig = {
 export function checkConfiguration(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Check STT configuration
-  if (!deepgramConfig.apiKey) {
-    errors.push('Deepgram API key is not configured');
+  // Check STT configuration based on provider
+  if (appConfig.sttProvider === 'deepgram') {
+    if (!deepgramConfig.apiKey) {
+      errors.push('Deepgram API key is not configured');
+    }
+  } else if (appConfig.sttProvider === 'transcribe') {
+    if (!bedrockConfig.region || !bedrockConfig.credentials) {
+      errors.push('AWS credentials are not configured for Transcribe');
+    }
+  }
+
+  // Check TTS configuration based on provider
+  if (appConfig.ttsProvider === 'polly') {
+    if (!bedrockConfig.region || !bedrockConfig.credentials) {
+      errors.push('AWS credentials are not configured for Polly');
+    }
   }
 
   // Check LLM configuration based on provider

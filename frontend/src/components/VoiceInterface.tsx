@@ -18,7 +18,7 @@ interface VoiceInterfaceProps {
   onScreenTransition?: (intent: string) => void; // Called with intent to transition screens
 }
 
-export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isInitialGreeting = false, onScreenTransition }: VoiceInterfaceProps) {
+export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting = false, onScreenTransition }: VoiceInterfaceProps) {
   const {
     isConnected,
     isRecording,
@@ -28,6 +28,7 @@ export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isIn
     startRecording,
     stopRecording,
     clearTranscript,
+    setSessionId,
   } = useVoiceAgent();
 
   // Get final transcripts only
@@ -35,6 +36,13 @@ export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isIn
 
   // Don't auto-start - user must click "Start Talking" button
   // Removed auto-start recording
+
+  // Sync session ID with voice handler when it changes
+  useEffect(() => {
+    if (sessionInfo?.sessionId && isConnected) {
+      setSessionId(sessionInfo.sessionId);
+    }
+  }, [sessionInfo?.sessionId, isConnected, setSessionId]);
 
   // Smart screen transition based on LLM intent
   useEffect(() => {

@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { ReportInfographic } from './ReportInfographic';
 
 interface ReportUploadProps {
   sessionId?: string;
@@ -214,59 +215,8 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
         )}
       </div>
 
-      {/* Analysis Results */}
-      {analysis && (
-        <div
-          style={{
-            maxWidth: '800px',
-            width: '100%',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            marginTop: '2rem',
-            textAlign: 'left',
-          }}
-        >
-          <h3
-            style={{
-              fontSize: '24px',
-              marginBottom: '1.5rem',
-              color: '#1e293b',
-              borderBottom: '2px solid #e2e8f0',
-              paddingBottom: '0.75rem',
-            }}
-          >
-            📊 Report Analysis
-          </h3>
-
-          <div
-            style={{
-              fontSize: '15px',
-              lineHeight: '1.8',
-              color: '#475569',
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {analysis}
-          </div>
-
-          <div
-            style={{
-              marginTop: '2rem',
-              padding: '1rem',
-              backgroundColor: '#f0f9ff',
-              borderLeft: '4px solid #3b82f6',
-              borderRadius: '4px',
-            }}
-          >
-            <p style={{ fontSize: '14px', color: '#1e40af', margin: 0 }}>
-              💬 <strong>Continue with voice:</strong> Ask me questions about your report,
-              or say "check my vitals" for a comprehensive health assessment.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Analysis Results - Interactive Infographic */}
+      {analysis && <ReportInfographic analysisText={analysis} />}
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
 import { bedrockConfig } from '../config/env';
 
 export class BedrockKnowledgeBaseRetriever {
-  private client: BedrockAgentRuntimeClient;
+  private client!: BedrockAgentRuntimeClient;
   private knowledgeBaseId: string;
   private isConfigured: boolean;
 

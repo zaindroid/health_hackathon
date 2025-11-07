@@ -32,6 +32,7 @@ export interface STTProvider {
   name: string;
   startStream(): void;
   stopStream(): void;
+  sendAudio(audioData: Buffer): void;
   onTranscript(callback: (transcript: string, isFinal: boolean) => void): void;
   isConfigured(): boolean;
 }
@@ -102,7 +103,7 @@ export interface ClientMessage {
 }
 
 export interface ServerMessage {
-  type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command';
+  type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command' | 'start_video_vitals';
   data?: any;
   transcript?: TranscriptEvent;
   llmResponse?: LLMResponse;
@@ -132,8 +133,8 @@ export interface ServerMessage {
 
 export interface AppConfig {
   llmProvider: 'bedrock' | 'openai' | 'local' | 'mock';
-  sttProvider: 'deepgram';
-  ttsProvider: 'webspeech' | 'external';
+  sttProvider: 'deepgram' | 'transcribe';
+  ttsProvider: 'webspeech' | 'cartesia' | 'polly';
   enableRAG: boolean;
   enableTools: boolean;
 }

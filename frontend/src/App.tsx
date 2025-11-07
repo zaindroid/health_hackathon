@@ -6,10 +6,11 @@
  * Role selection and navigation done via voice
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { VoiceInterface } from './components/VoiceInterface';
 import { BioDigitalViewer } from './components/BioDigitalViewer';
 import { ReportUpload } from './components/ReportUpload';
+import { VideoAnalysis } from './components/VideoAnalysis';
 import './App.css';
 
 interface SessionInfo {
@@ -18,11 +19,12 @@ interface SessionInfo {
   useCase?: string;
 }
 
-type ScreenType = 'greeting' | 'report_upload' | 'anatomy' | 'education';
+type ScreenType = 'greeting' | 'report_upload' | 'anatomy' | 'education' | 'video_vitals';
 
 function App() {
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('greeting');
+  const [showVideoVitals, setShowVideoVitals] = useState(false);
 
   /**
    * Handle session start (called by voice bot after role detection)
@@ -64,6 +66,20 @@ function App() {
   // Removed auto-start - user must click "Start Talking" button
 
   /**
+   * Listen for video vitals event from voice agent
+   */
+  useEffect(() => {
+    const handleVideoVitals = () => {
+      console.log('📹 Received start-video-vitals event');
+      setShowVideoVitals(true);
+      setCurrentScreen('video_vitals');
+    };
+
+    window.addEventListener('start-video-vitals', handleVideoVitals);
+    return () => window.removeEventListener('start-video-vitals', handleVideoVitals);
+  }, []);
+
+  /**
    * Handle screen transition based on LLM intent
    * Called when voice bot determines user's need
    */
@@ -82,7 +98,9 @@ function App() {
         setCurrentScreen('anatomy'); // Can add dedicated education screen later
         break;
       case 'vitals_check':
-        setCurrentScreen('anatomy'); // Video analysis on anatomy screen
+      case 'vitals_consent_yes':
+        setShowVideoVitals(true);
+        setCurrentScreen('video_vitals');
         break;
       default:
         console.log('⚠️  Unknown intent, staying on current screen');
@@ -232,6 +250,15 @@ function App() {
           <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative' }}>
             <div style={{ height: '100%', width: '100%', padding: '1rem' }}>
               <BioDigitalViewer />
+            </div>
+          </div>
+        )}
+
+        {/* Video Vitals Screen - CAIRE API heart rate monitoring */}
+        {currentScreen === 'video_vitals' && showVideoVitals && (
+          <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative', overflowY: 'auto' }}>
+            <div style={{ width: '100%', padding: '1rem' }}>
+              <VideoAnalysis sessionId={sessionInfo?.sessionId} />
             </div>
           </div>
         )}

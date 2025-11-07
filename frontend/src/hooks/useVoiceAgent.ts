@@ -20,6 +20,7 @@ interface VoiceAgentActions {
   startRecording: () => Promise<void>;
   stopRecording: () => void;
   clearTranscript: () => void;
+  setSessionId: (sessionId: string) => void;
 }
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
@@ -126,7 +127,7 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
 
       case 'audio':
         if (message.audio) {
-          console.log('🔊 Received audio from Cartesia');
+          console.log('🔊 Received audio from TTS provider');
           playCartesiaAudio(message.audio);
         }
         break;
@@ -145,6 +146,13 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
           console.log('📹 Received camera command:', message.cameraCommand);
           executeCameraCommand(message.cameraCommand);
         }
+        break;
+
+      case 'start_video_vitals':
+        console.log('📹 Starting video vitals check');
+        // Dispatch event to show video analysis component
+        const vitalsEvent = new CustomEvent('start-video-vitals');
+        window.dispatchEvent(vitalsEvent);
         break;
 
       default:
@@ -261,6 +269,20 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
   }, []);
 
   /**
+   * Set the database session ID for the voice WebSocket
+   */
+  const setSessionId = useCallback((sessionId: string) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'control',
+        action: 'set_session_id',
+        sessionId,
+      }));
+      console.log(`🔗 Sent session ID to voice handler: ${sessionId}`);
+    }
+  }, []);
+
+  /**
    * Convert Float32Array to Int16Array (PCM16)
    */
   const convertFloat32ToInt16 = (float32Array: Float32Array): Int16Array => {
@@ -273,7 +295,7 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
   };
 
   /**
-   * Play audio from Cartesia (PCM data)
+   * Play audio from TTS provider (Polly or Cartesia - PCM data)
    */
   const playCartesiaAudio = async (audioData: { data: string; format: string; sampleRate: number }) => {
     try {
@@ -338,9 +360,9 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
 
       source.start(0);
 
-      console.log(`🔊 Playing Cartesia audio (${bytes.length} bytes)`);
+      console.log(`🔊 Playing TTS audio (${bytes.length} bytes, ${audioData.sampleRate}Hz)`);
     } catch (error) {
-      console.error('❌ Error playing Cartesia audio:', error);
+      console.error('❌ Error playing TTS audio:', error);
     }
   };
 
@@ -395,5 +417,6 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
     startRecording,
     stopRecording,
     clearTranscript,
+    setSessionId,
   };
 }

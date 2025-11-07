@@ -12,7 +12,7 @@ import sessionOrchestrator from '../services/sessionOrchestrator';
 import { kbRetriever } from '../rag/retriever_bedrock';
 import { getLLMProvider } from '../llm';
 
-// pdf-parse exports a named function PDFParse
+// pdf-parse v2 exports PDFParse class
 const { PDFParse } = require('pdf-parse');
 
 const router: Router = express.Router();
@@ -124,6 +124,40 @@ router.post('/data/video', async (req: Request, res: Response) => {
       success: false,
       error: error.message || 'Failed to record video data'
     });
+  }
+});
+
+/**
+ * POST /api/session/vitals/complete
+ * Trigger voice explanation of vitals + report combined analysis
+ */
+router.post('/vitals/complete', async (req: Request, res: Response) => {
+  try {
+    const { sessionId, vitals } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ success: false, error: 'sessionId required' });
+    }
+
+    console.log(`📊 Vitals complete for session: ${sessionId}`);
+
+    // Store vitals summary in session
+    const session = sessionOrchestrator.getActiveSession(sessionId);
+    if (session) {
+      session.vitals.push({
+        type: 'video_vitals_complete',
+        heartRate: vitals.heartRate,
+        pupilLeft: vitals.eyeMetrics?.pupil_diameter_left,
+        pupilRight: vitals.eyeMetrics?.pupil_diameter_right,
+        blinkRate: vitals.eyeMetrics?.blink_rate,
+        timestamp: new Date(),
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Vitals complete error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
@@ -420,9 +454,10 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
 
     console.log(`📄 Processing PDF upload: ${file.originalname}`);
 
-    // Parse PDF - use PDFParse function from pdf-parse module
+    // Parse PDF using pdf-parse v2 API
     const dataBuffer = await fs.promises.readFile(file.path);
-    const pdfData = await PDFParse(dataBuffer);
+    const parser = new PDFParse({ data: dataBuffer });
+    const pdfData = await parser.getText();
     const text = pdfData.text;
 
     console.log(`✅ PDF parsed: ${text.length} characters extracted`);
@@ -444,48 +479,41 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
           // Truncate text if too long (keep first 3000 chars for analysis)
           const textToAnalyze = text.length > 3000 ? text.substring(0, 3000) + '...' : text;
 
-          const analysisPrompt = `Analyze this medical report and provide a simple explanation:
+          const analysisPrompt = `You are analyzing a medical report. Read it carefully and provide a comprehensive analysis.
 
 REPORT TEXT:
 ${textToAnalyze}
 
+INSTRUCTIONS:
+1. Identify the report type (CBC, metabolic panel, lipid panel, imaging, etc.)
+2. For EACH lab value, state if it's NORMAL or ABNORMAL with the range
+3. Explain what abnormal values mean in simple terms
+4. Provide clear recommendations
+
 Provide analysis in this exact format:
 {
-  "utterance": "Brief summary of the report (2-3 sentences)",
+  "utterance": "This is a [report type]. I've reviewed your results and identified what's normal and what needs attention.",
   "intent": "report_analysis",
+  "report_type": "Complete Blood Count | Metabolic Panel | Lipid Panel | etc",
   "findings": {
-    "normal": ["List of normal/healthy findings"],
-    "abnormal": ["List of concerning/abnormal findings"],
-    "action": "rest | monitor | see_doctor | urgent_care"
+    "normal": ["Hemoglobin 14.5 g/dL - NORMAL (12-16)", "White blood cells 7,200 - NORMAL (4,500-11,000)"],
+    "abnormal": ["Cholesterol 240 mg/dL - HIGH (normal <200). Consider dietary changes.", "Glucose 126 mg/dL - ELEVATED (normal 70-100). Pre-diabetes concern."],
+    "action": "see_doctor"
   }
 }
 
-Make it simple and easy to understand. Focus on what's fine vs what needs attention.`;
+Be specific with numbers and ranges. Say NORMAL or ABNORMAL clearly.`;
 
           const llmResponse = await llmProvider.generateResponse(analysisPrompt);
 
-          // Extract findings from response
+          // Return structured JSON for frontend to display as infographic
           if (llmResponse.utterance) {
-            analysis = llmResponse.utterance;
-
-            // If we have structured findings, format them nicely
+            // If we have structured findings, return as JSON for ReportInfographic component
             if ((llmResponse as any).findings) {
-              const findings = (llmResponse as any).findings;
-              let formattedAnalysis = llmResponse.utterance + '\n\n';
-
-              if (findings.normal && findings.normal.length > 0) {
-                formattedAnalysis += '✅ What\'s Fine:\n' + findings.normal.map((f: string) => `• ${f}`).join('\n') + '\n\n';
-              }
-
-              if (findings.abnormal && findings.abnormal.length > 0) {
-                formattedAnalysis += '⚠️ Needs Attention:\n' + findings.abnormal.map((f: string) => `• ${f}`).join('\n') + '\n\n';
-              }
-
-              if (findings.action) {
-                formattedAnalysis += `📋 Recommendation: ${findings.action.replace('_', ' ')}`;
-              }
-
-              analysis = formattedAnalysis;
+              analysis = JSON.stringify(llmResponse);
+            } else {
+              // Fallback to text if no structured data
+              analysis = llmResponse.utterance;
             }
           }
           console.log('✅ LLM analysis complete');
