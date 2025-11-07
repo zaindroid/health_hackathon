@@ -147,6 +147,7 @@ export interface DeepgramConfig {
 export interface BedrockConfig {
   region: string;
   modelId: string;
+  knowledgeBaseId?: string; // Optional: AWS Bedrock Knowledge Base ID for RAG
   credentials?: {
     accessKeyId: string;
     secretAccessKey: string;

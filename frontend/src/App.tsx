@@ -1,6 +1,8 @@
 /**
  * Main Application Component
  * Multi-tab healthcare platform with voice-controlled 3D anatomy and video health monitoring
+ *
+ * NEW: Added Welcome Screen for role selection and session management
  */
 
 import { useState } from 'react';
@@ -8,12 +10,95 @@ import { VoiceInterface } from './components/VoiceInterface';
 import { BioDigitalViewer } from './components/BioDigitalViewer';
 import { VideoAnalysis } from './components/VideoAnalysis';
 import { MedicalScanner } from './components/MedicalScanner';
+import WelcomeScreen from './components/WelcomeScreen';
 import './App.css';
 
 type Tab = 'voice-3d' | 'medical-scanner' | 'video-analysis' | 'dashboard';
 
+interface SessionInfo {
+  sessionId: string;
+  role: 'patient' | 'doctor';
+  useCase?: string;
+}
+
 function App() {
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('voice-3d');
+  const [isLoading, setIsLoading] = useState(false);
+
+  /**
+   * Handle session start from Welcome Screen
+   */
+  const handleStartSession = async (role: 'patient' | 'doctor', useCase?: string) => {
+    setIsLoading(true);
+
+    try {
+      // Call session API to create new session
+      const response = await fetch('http://localhost:3001/api/session/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role, useCase }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('✅ Session started:', data.sessionId);
+        setSessionInfo({
+          sessionId: data.sessionId,
+          role: data.role,
+          useCase: data.useCase,
+        });
+      } else {
+        console.error('❌ Failed to start session:', data.error);
+        alert('Failed to start session. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Error starting session:', error);
+      alert('Error connecting to server. Please check if backend is running.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Show Welcome Screen if no active session
+  if (!sessionInfo) {
+    return <WelcomeScreen onStart={handleStartSession} />;
+  }
+
+  /**
+   * Handle session end
+   */
+  const handleEndSession = async () => {
+    if (!sessionInfo) return;
+
+    const confirmEnd = window.confirm('Are you sure you want to end this session?');
+    if (!confirmEnd) return;
+
+    try {
+      const response = await fetch('http://localhost:3001/api/session/end', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId: sessionInfo.sessionId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('✅ Session ended:', data.report);
+        alert('Session ended. Thank you!');
+        setSessionInfo(null); // Return to Welcome Screen
+      } else {
+        console.error('❌ Failed to end session:', data.error);
+      }
+    } catch (error) {
+      console.error('❌ Error ending session:', error);
+    }
+  };
 
   return (
     <div className="app" style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
@@ -27,12 +112,41 @@ function App() {
         <div style={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           padding: '15px 30px',
           borderBottom: '1px solid rgba(255,255,255,0.1)',
         }}>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
-            🏥 Healthcare AI Platform
-          </h1>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+              🏥 Health Helper
+            </h1>
+            <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>
+              {sessionInfo.role === 'patient' ? '👤 Patient' : '👨‍⚕️ Doctor'} Session
+              {sessionInfo.useCase && ` • ${sessionInfo.useCase}`}
+            </div>
+          </div>
+          <button
+            onClick={handleEndSession}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            End Session
+          </button>
         </div>
 
         <nav style={{ display: 'flex', gap: 0 }}>

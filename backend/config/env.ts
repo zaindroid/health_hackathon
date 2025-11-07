@@ -48,6 +48,7 @@ export const deepgramConfig: DeepgramConfig = {
 export const bedrockConfig: BedrockConfig = {
   region: process.env.AWS_REGION || 'us-east-1',
   modelId: process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-sonnet-20240229-v1:0',
+  knowledgeBaseId: process.env.AWS_BEDROCK_KB_ID || 'OPTIONAL', // Optional: Set up Knowledge Base in AWS Console
   credentials: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
     ? {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,

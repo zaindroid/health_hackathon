@@ -12,6 +12,7 @@ import { serverConfig, printConfig, checkConfiguration } from './config/env';
 import { VoiceSessionHandler } from './routes/voice';
 import { VideoHealthHandler } from './routes/video-health';
 import { testLLMProvider } from './llm';
+import sessionRoutes from './routes/session';
 
 class VoiceAgentServer {
   private app: Express;
@@ -98,9 +99,14 @@ class VoiceAgentServer {
           config: 'GET /config',
           testLLM: 'POST /test/llm',
           websocket: 'WS /voice',
+          sessions: 'API /api/session/*',
         },
       });
     });
+
+    // Session management routes
+    this.app.use('/api/session', sessionRoutes);
+    console.log('✅ Session API routes registered at /api/session');
   }
 
   /**
