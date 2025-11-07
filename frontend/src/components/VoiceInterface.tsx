@@ -18,7 +18,7 @@ interface VoiceInterfaceProps {
   onConversationStarted?: () => void; // Called after first LLM response
 }
 
-export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting = false, onConversationStarted }: VoiceInterfaceProps) {
+export function VoiceInterface({ sessionInfo: _sessionInfo, onSessionReady, isInitialGreeting = false, onConversationStarted }: VoiceInterfaceProps) {
   const {
     isConnected,
     isRecording,
