@@ -5,6 +5,16 @@
       "name": "Neck, Shoulders & Upper Back",
       "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6cr6&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=ML3xE&paid=o_22e32b94",
       "description": "Detailed anatomy of the neck, shoulder, and upper back region showing muscles, bones, and connective tissues",
+      "aiContext": {
+        "topics": ["neck", "shoulder", "upper back", "trapezius"],
+        "default_view": "front",
+        "viewContexts": {
+          "front": ["anterior", "front", "ventral"],
+          "back": ["posterior", "back"],
+          "right_shoulder": ["right shoulder", "rotator cuff", "right deltoid"],
+          "left_shoulder": ["left shoulder", "left deltoid"]
+        }
+      },
       "viewpoints": [
         {
           "id": "front",
@@ -105,6 +115,16 @@
       "name": "Male Skeletal System",
       "biodigitalUrl": "https://human.biodigital.com/viewer/?id=production/maleAdult/male_system_anatomy_skeletal_09&ui-info=true&dk=c0c3685a4e0996e0095ae1a7d7cb46079b9db70a",
       "description": "Complete skeletal system showing all major bones of the human body",
+      "aiContext": {
+        "topics": ["bones", "joints", "vertebrae", "scapula", "clavicle", "cervical spine", "thoracic spine"],
+        "default_view": "front",
+        "viewContexts": {
+          "front": ["anterior", "front", "ventral", "sternum", "ribs", "pelvis"],
+          "back": ["posterior", "back", "dorsal", "vertebral column", "scapulae"],
+          "right_shoulder": ["right shoulder joint", "right clavicle", "right scapula", "right humerus head"],
+          "left_shoulder": ["left shoulder joint", "left clavicle", "left scapula", "left humerus head"]
+        }
+      },
       "viewpoints": [
         {
           "id": "front",

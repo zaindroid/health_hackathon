@@ -60,6 +60,49 @@ class AnatomyNavigator:
                 return model
         return None
 
+    def findModelForTopic(self, topic: str) -> Optional[str]:
+        q = topic.lower().strip()
+        for m in self.data.get("models", []):
+            if m.get("aiContext", {}).get("topics"):
+                for t in m["aiContext"]["topics"]:
+                    if q in t.lower():
+                        return m["id"]
+        return None
+    }
+
+    """
+    * Find the best viewpoint id for a topic within a model.
+    * Falls back to model.aiContext.default_view or 'front'.
+    """
+    def findViewpointForTopic(self, modelId: str, topic: str) -> Optional[str]:
+        model = self.get_model_by_id(modelId)
+        if not model:
+            return None
+        q = topic.lower().strip()
+        # Per-viewpoint aiContext first
+        for vp in model.get("viewpoints", []):
+            keywords = (vp.get("aiContext", {}) or model.get("aiContext", {}).get("viewContexts", {}).get(vp.get("id"), [])).map(lambda k: k.lower())
+            for k in keywords:
+                if k in q:
+                    return vp.get("id")
+        # Model default
+        return model.get("aiContext", {}).get("default_view") or (model.get("viewpoints", [])[0].get("id") if model.get("viewpoints", []) else None)
+
+    # Ensure camera commands include modelId in params
+    def cameraPanTo(self, position: CameraPosition, animate: bool = True, duration: int = 1000, modelId: Optional[str] = None) -> Dict[str, Any]:
+        return {
+            "action": "camera.set",
+            "params": {
+                "position": position.position,
+                "target": position.target,
+                "animate": animate,
+                "duration": duration,
+                "modelId": modelId
+            }
+        }
+
+
+
     def get_viewpoint_camera(self, model_id: str, viewpoint_id: str) -> Optional[CameraPosition]:
         """
         Look up camera coordinates for a specific viewpoint.
