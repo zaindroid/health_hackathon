@@ -49,7 +49,8 @@ function App() {
           role: data.role,
           useCase: data.useCase,
         });
-        setShowMainInterface(true);
+        // Don't set showMainInterface=true here - let user interact first
+        // Main interface will show after user speaks or clicks
       } else {
         console.error('❌ Failed to start session:', data.error);
       }
@@ -67,6 +68,15 @@ function App() {
   useEffect(() => {
     handleStartSession('patient');
   }, []);
+
+  /**
+   * Handle transition from greeting screen to main interface
+   * Called after user's first interaction with the voice bot
+   */
+  const handleConversationStarted = () => {
+    console.log('🎤 User has interacted - showing main interface');
+    setShowMainInterface(true);
+  };
 
   /**
    * Handle session end
@@ -91,7 +101,8 @@ function App() {
       if (data.success) {
         console.log('✅ Session ended:', data.report);
         alert('Session ended. Thank you!');
-        setSessionInfo(null); // Return to Welcome Screen
+        setSessionInfo(null);
+        setShowMainInterface(false); // Return to greeting screen
       } else {
         console.error('❌ Failed to end session:', data.error);
       }
@@ -128,7 +139,11 @@ function App() {
         {/* Full-screen voice interface */}
         <main style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ width: '100%', height: '100%', maxWidth: '800px', padding: '20px' }}>
-            <VoiceInterface onSessionReady={handleStartSession} isInitialGreeting={true} />
+            <VoiceInterface
+              onSessionReady={handleStartSession}
+              isInitialGreeting={true}
+              onConversationStarted={handleConversationStarted}
+            />
           </div>
         </main>
       </div>

@@ -15,9 +15,10 @@ interface VoiceInterfaceProps {
   };
   onSessionReady?: (role: 'patient' | 'doctor', useCase?: string) => void;
   isInitialGreeting?: boolean;
+  onConversationStarted?: () => void; // Called after first LLM response
 }
 
-export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting = false }: VoiceInterfaceProps) {
+export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting = false, onConversationStarted }: VoiceInterfaceProps) {
   const {
     isConnected,
     isRecording,
@@ -39,6 +40,17 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
       return () => clearTimeout(timer);
     }
   }, [isInitialGreeting, isConnected, isRecording]);
+
+  // Transition to main interface after first user interaction
+  useEffect(() => {
+    if (isInitialGreeting && llmResponse && onConversationStarted) {
+      // User has received their first response - transition after a delay
+      const timer = setTimeout(() => {
+        onConversationStarted();
+      }, 3000); // Give user 3 seconds to see the response
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialGreeting, llmResponse, onConversationStarted]);
 
   // Get final transcripts only
   const finalTranscripts = transcript.filter((t) => t.isFinal);
