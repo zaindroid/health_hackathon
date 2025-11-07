@@ -33,16 +33,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
   // Get final transcripts only
   const finalTranscripts = transcript.filter((t) => t.isFinal);
 
-  // Auto-start recording in initial greeting mode
-  useEffect(() => {
-    if (isInitialGreeting && isConnected && !isRecording) {
-      // Small delay to let user see the interface
-      const timer = setTimeout(() => {
-        startRecording();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialGreeting, isConnected, isRecording]);
+  // Don't auto-start - user must click "Start Talking" button
+  // Removed auto-start recording
 
   // Transition to main interface after first user interaction
   // ONLY if user has actually spoken (finalTranscripts exist)
@@ -193,7 +185,14 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
             </button>
           ) : (
             <button
-              onClick={startRecording}
+              onClick={async () => {
+                // Start session first if this is the initial greeting
+                if (isInitialGreeting && onSessionReady) {
+                  await onSessionReady('patient');
+                }
+                // Then start recording
+                startRecording();
+              }}
               disabled={!isConnected}
               style={{
                 padding: '16px 32px',
@@ -226,7 +225,7 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
 
         {/* Connection status */}
         <div style={{ fontSize: '14px', color: isConnected ? '#10b981' : '#ef4444' }}>
-          {isConnected ? '🟢 Connected' : '🔴 Connecting...'}
+          {isConnected ? (isRecording ? '🟢 Listening...' : '🟢 Ready to start') : '🔴 Connecting...'}
         </div>
 
         {/* Error display */}

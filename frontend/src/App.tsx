@@ -62,12 +62,10 @@ function App() {
   };
 
   /**
-   * Auto-create session on mount for voice-first flow
-   * Start with patient role by default, can be updated via voice
+   * Session will be created when user clicks "Start Talking"
+   * Not automatically on mount
    */
-  useEffect(() => {
-    handleStartSession('patient');
-  }, []);
+  // Removed auto-start - user must click "Start Talking" button
 
   /**
    * Handle transition from greeting screen to main interface
