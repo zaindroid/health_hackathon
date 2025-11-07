@@ -102,7 +102,7 @@ export interface ClientMessage {
 }
 
 export interface ServerMessage {
-  type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command';
+  type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command' | 'viewer_model';
   data?: any;
   transcript?: TranscriptEvent;
   llmResponse?: LLMResponse;
@@ -123,6 +123,16 @@ export interface ServerMessage {
       duration?: number;
     };
     objectName?: string;
+  };
+  viewerModel?: {
+    modelId: string;
+    modelName: string;
+    biodigitalUrl: string;
+    viewpointId?: string;
+    viewpointName?: string;
+    autoSelected?: boolean;
+    reason?: string;
+    matchedTerms?: string[];
   };
 }
 

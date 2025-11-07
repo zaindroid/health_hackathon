@@ -7,11 +7,17 @@ import { WebSocket } from 'ws';
 import { getDeepgramProvider } from '../stt/deepgram';
 import { getLLMProvider } from '../llm';
 import { getBioDigitalHandler } from '../tools/biodigital_placeholder';
+import { getAnatomyNavigator, AnatomyMatchResult } from '../tools/anatomy_navigator';
 import { getMedicalRetriever } from '../rag/retriever_placeholder';
 import { getCartesiaProvider } from '../tts/cartesia';
 import { getTTSProvider } from '../tts/webspeech_placeholder';
-import { ServerMessage, ClientMessage } from '../../shared/types';
+import { ServerMessage, ClientMessage, LLMResponse, ToolAction } from '../../shared/types';
 import { appConfig } from '../config/env';
+
+interface NavigationResolution {
+  suggestion: AnatomyMatchResult | null;
+  applied: boolean;
+}
 
 export class VoiceSessionHandler {
   private ws: WebSocket;
@@ -22,6 +28,9 @@ export class VoiceSessionHandler {
   private ragRetriever: ReturnType<typeof getMedicalRetriever>;
   private ttsProvider: ReturnType<typeof getCartesiaProvider> | ReturnType<typeof getTTSProvider>;
   private isActive = false;
+  private anatomyNavigator = getAnatomyNavigator();
+  private loadedModelId: string | null = null;
+  private loadedViewpointId: string | null = null;
 
   constructor(ws: WebSocket, sessionId: string) {
     this.ws = ws;
@@ -202,11 +211,18 @@ export class VoiceSessionHandler {
       const llmResponse = await this.llmProvider.generateResponse(transcript, ragContext);
       console.log(`✅ LLM response: ${llmResponse.utterance}`);
 
+      const navigationResolution = this.applyAutoNavigation(transcript, llmResponse);
+
       // Send response to client (always send the structured JSON response)
       this.sendMessage({
         type: 'llm_response',
         llmResponse,
       });
+
+      const viewerMeta = this.buildViewerMeta(llmResponse.tool_action, navigationResolution.suggestion);
+      if (viewerMeta && this.shouldSendViewerModel(viewerMeta)) {
+        this.sendViewerModelUpdate(viewerMeta, navigationResolution.applied);
+      }
 
       // Only generate/send server-side audio when configured for external TTS
       if (appConfig.ttsProvider === 'external' && this.ttsProvider.isConfigured()) {
@@ -258,6 +274,165 @@ export class VoiceSessionHandler {
       console.error('❌ Error processing transcript:', error);
       this.sendError('Failed to process your request');
     }
+  }
+
+  private applyAutoNavigation(transcript: string, llmResponse: LLMResponse): NavigationResolution {
+    if (!appConfig.enableTools) {
+      return { suggestion: null, applied: false };
+    }
+
+    const suggestion = this.anatomyNavigator.suggestViewForQuery(transcript);
+    if (!suggestion) {
+      return { suggestion: null, applied: false };
+    }
+
+    const existing = llmResponse.tool_action;
+    let updatedAction: ToolAction;
+    let applied = false;
+
+    if (!existing || !this.toolHandler.canHandle(existing)) {
+      updatedAction = {
+        op: 'navigate',
+        target: suggestion.viewpointId,
+        params: {
+          model_id: suggestion.modelId,
+          auto_selected: true,
+          reason: suggestion.reason,
+          matched_terms: suggestion.matchedKeywords,
+        },
+      };
+      applied = true;
+    } else {
+      const params = { ...(existing.params || {}) };
+      let target = existing.target;
+
+      if (!params.model_id) {
+        params.model_id = suggestion.modelId;
+        params.auto_filled = true;
+        params.reason = params.reason || suggestion.reason;
+        params.matched_terms = params.matched_terms || suggestion.matchedKeywords;
+        applied = true;
+      }
+
+      if (!target && existing.op === 'navigate') {
+        target = suggestion.viewpointId;
+        applied = true;
+      }
+
+      updatedAction = { ...existing, target, params };
+
+      const finalModelId = typeof params.model_id === 'string' ? params.model_id : undefined;
+      const finalViewpointId = this.mapOpToViewpointId(updatedAction) || suggestion.viewpointId;
+
+      if (finalModelId === suggestion.modelId && finalViewpointId === suggestion.viewpointId) {
+        applied = true;
+      }
+    }
+
+    llmResponse.tool_action = updatedAction;
+
+    if (applied) {
+      this.anatomyNavigator.setCurrentModel(suggestion.modelId);
+      console.log(`🧭 Auto-selected viewpoint: ${suggestion.viewpointName} (${suggestion.modelName})`);
+    }
+
+    return { suggestion, applied };
+  }
+
+  private buildViewerMeta(action: ToolAction | undefined, suggestion: AnatomyMatchResult | null): AnatomyMatchResult | null {
+    const modelId = this.resolveModelId(action, suggestion);
+    if (!modelId) {
+      return null;
+    }
+
+    const viewpointId = this.resolveViewpointId(action, suggestion);
+    if (!viewpointId) {
+      return null;
+    }
+
+    const modelInfo = this.anatomyNavigator.getModelInfo(modelId);
+    if (!modelInfo) {
+      return null;
+    }
+
+    const viewpointInfo = this.anatomyNavigator.getViewpointInfo(modelId, viewpointId);
+    if (!viewpointInfo) {
+      return null;
+    }
+
+    return {
+      modelId,
+      modelName: modelInfo.name,
+      biodigitalUrl: modelInfo.biodigitalUrl,
+      viewpointId,
+      viewpointName: viewpointInfo.name,
+      score: suggestion?.score ?? 0,
+      matchedKeywords: suggestion?.matchedKeywords ?? [],
+      reason: suggestion?.reason ?? `Showing ${viewpointInfo.name} in ${modelInfo.name}.`,
+    };
+  }
+
+  private resolveModelId(action: ToolAction | undefined, suggestion: AnatomyMatchResult | null): string | null {
+    if (action?.params?.model_id) {
+      return String(action.params.model_id);
+    }
+    return suggestion?.modelId ?? null;
+  }
+
+  private resolveViewpointId(action: ToolAction | undefined, suggestion: AnatomyMatchResult | null): string | null {
+    const fromAction = this.mapOpToViewpointId(action);
+    if (fromAction) {
+      return fromAction;
+    }
+    return suggestion?.viewpointId ?? null;
+  }
+
+  private mapOpToViewpointId(action: ToolAction | undefined): string | undefined {
+    if (!action) {
+      return undefined;
+    }
+
+    if (action.target) {
+      return action.target;
+    }
+
+    switch (action.op) {
+      case 'show_front':
+        return 'front';
+      case 'show_back':
+        return 'back';
+      case 'show_right_shoulder':
+        return 'right_shoulder';
+      case 'show_left_shoulder':
+        return 'left_shoulder';
+      default:
+        return undefined;
+    }
+  }
+
+  private shouldSendViewerModel(meta: AnatomyMatchResult): boolean {
+    return meta.modelId !== this.loadedModelId || meta.viewpointId !== this.loadedViewpointId;
+  }
+
+  private sendViewerModelUpdate(meta: AnatomyMatchResult, autoSelected: boolean): void {
+    this.sendMessage({
+      type: 'viewer_model',
+      viewerModel: {
+        modelId: meta.modelId,
+        modelName: meta.modelName,
+        biodigitalUrl: meta.biodigitalUrl,
+        viewpointId: meta.viewpointId,
+        viewpointName: meta.viewpointName,
+        autoSelected,
+        reason: meta.reason,
+        matchedTerms: meta.matchedKeywords,
+      },
+    });
+
+    this.loadedModelId = meta.modelId;
+    this.loadedViewpointId = meta.viewpointId;
+    this.anatomyNavigator.setCurrentModel(meta.modelId);
+    console.log(`📡 Viewer update dispatched: ${meta.modelName} → ${meta.viewpointName}`);
   }
 
   /**

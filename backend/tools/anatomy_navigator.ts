@@ -41,11 +41,33 @@ export interface AnatomyModel {
   biodigitalUrl: string;
   description: string;
   viewpoints: Viewpoint[];
+  aiContext?: {
+    topics?: string[];
+    default_view?: string;
+    viewContexts?: Record<string, string[]>;
+  };
 }
 
 export interface AnatomyDatabase {
   models: AnatomyModel[];
   metadata?: any;
+}
+
+interface QueryAnalysis {
+  original: string;
+  tokens: Set<string>;
+  phrases: Set<string>;
+}
+
+export interface AnatomyMatchResult {
+  modelId: string;
+  modelName: string;
+  viewpointId: string;
+  viewpointName: string;
+  biodigitalUrl: string;
+  score: number;
+  matchedKeywords: string[];
+  reason: string;
 }
 
 export class AnatomyNavigator {
@@ -307,6 +329,205 @@ export class AnatomyNavigator {
       name: model.name,
       description: model.description,
     }));
+  }
+
+  /**
+   * Public helpers to access full model/viewpoint definitions
+   */
+  getModelInfo(modelId: string): AnatomyModel | null {
+    return this.getModelById(modelId);
+  }
+
+  getViewpointInfo(modelId: string, viewpointId: string): Viewpoint | null {
+    const model = this.getModelById(modelId);
+    if (!model) {
+      return null;
+    }
+    return model.viewpoints.find((vp) => vp.id === viewpointId) || null;
+  }
+
+  /**
+   * Suggest the most relevant model/viewpoint pairing for a natural language query
+   */
+  suggestViewForQuery(query: string): AnatomyMatchResult | null {
+    const cleaned = query?.trim();
+    if (!cleaned) {
+      return null;
+    }
+
+    const analysis = this.analyzeQuery(cleaned);
+    let best: AnatomyMatchResult | null = null;
+
+    for (const model of this.data.models) {
+      const modelMatches: string[] = [];
+      let modelScore = 0;
+
+      if (model.aiContext?.topics?.length) {
+        modelScore += this.scoreList(analysis, model.aiContext.topics, 4, modelMatches);
+      }
+
+      modelScore += this.scoreText(analysis, model.name, 2, modelMatches);
+      modelScore += this.scoreText(analysis, model.description, 1, modelMatches);
+
+      for (const viewpoint of model.viewpoints) {
+        const viewMatches = [...modelMatches];
+        let viewScore = modelScore;
+
+        if (model.aiContext?.viewContexts) {
+          const contexts = model.aiContext.viewContexts[viewpoint.id];
+          if (contexts?.length) {
+            viewScore += this.scoreList(analysis, contexts, 6, viewMatches);
+          }
+        }
+
+        viewScore += this.scoreText(analysis, viewpoint.name, 4, viewMatches);
+        viewScore += this.scoreText(analysis, viewpoint.description, 2, viewMatches);
+
+        if (viewpoint.clinicalContext) {
+          viewScore += this.scoreText(analysis, viewpoint.clinicalContext, 2, viewMatches);
+        }
+
+        if (viewpoint.commonUseCases?.length) {
+          viewScore += this.scoreList(analysis, viewpoint.commonUseCases, 1.5, viewMatches);
+        }
+
+        if (viewpoint.anatomyVisible) {
+          const flattened = this.flattenRecordValues(viewpoint.anatomyVisible);
+          viewScore += this.scoreList(analysis, flattened, 1.5, viewMatches);
+        }
+
+        viewScore += this.directionalBoost(analysis, viewpoint.id, viewMatches);
+
+        if (!best || viewScore > best.score) {
+          best = {
+            modelId: model.id,
+            modelName: model.name,
+            viewpointId: viewpoint.id,
+            viewpointName: viewpoint.name,
+            biodigitalUrl: model.biodigitalUrl,
+            score: viewScore,
+            matchedKeywords: Array.from(new Set(viewMatches)),
+            reason: this.buildReason(viewMatches, model.name, viewpoint.name),
+          };
+        }
+      }
+    }
+
+    if (best && best.score < 3) {
+      return null;
+    }
+
+    return best;
+  }
+
+  private analyzeQuery(query: string): QueryAnalysis {
+    const normalized = this.normalize(query);
+    const rawTokens = normalized.split(' ').filter(Boolean);
+
+    const tokens = new Set<string>(rawTokens);
+    const phrases = new Set<string>(rawTokens);
+
+    for (let size = 2; size <= 3; size++) {
+      for (let i = 0; i <= rawTokens.length - size; i++) {
+        const phrase = rawTokens.slice(i, i + size).join(' ');
+        phrases.add(phrase);
+      }
+    }
+
+    return {
+      original: query,
+      tokens,
+      phrases,
+    };
+  }
+
+  private scoreList(analysis: QueryAnalysis, values: string[], weight: number, matches: string[]): number {
+    let score = 0;
+    for (const value of values) {
+      score += this.scoreText(analysis, value, weight, matches);
+    }
+    return score;
+  }
+
+  private scoreText(analysis: QueryAnalysis, text: string | undefined, weight: number, matches: string[]): number {
+    if (!text) {
+      return 0;
+    }
+
+    const normalized = this.normalize(text);
+    let score = 0;
+
+    for (const phrase of analysis.phrases) {
+      if (phrase.length < 3) {
+        continue;
+      }
+      if (normalized.includes(phrase)) {
+        score += weight;
+        matches.push(text.trim());
+        break;
+      }
+    }
+
+    return score;
+  }
+
+  private directionalBoost(analysis: QueryAnalysis, viewpointId: string, matches: string[]): number {
+    let boost = 0;
+
+    if (analysis.tokens.has('right') && viewpointId.includes('right')) {
+      boost += 3;
+      matches.push('right side');
+    }
+
+    if (analysis.tokens.has('left') && viewpointId.includes('left')) {
+      boost += 3;
+      matches.push('left side');
+    }
+
+    if ((analysis.tokens.has('front') || analysis.tokens.has('anterior')) && viewpointId.includes('front')) {
+      boost += 2;
+      matches.push('front/anterior');
+    }
+
+    if ((analysis.tokens.has('back') || analysis.tokens.has('posterior')) && viewpointId.includes('back')) {
+      boost += 2;
+      matches.push('back/posterior');
+    }
+
+    if (analysis.tokens.has('neck') && viewpointId.includes('neck')) {
+      boost += 1.5;
+      matches.push('neck');
+    }
+
+    return boost;
+  }
+
+  private flattenRecordValues(record: Record<string, any>): string[] {
+    const values: string[] = [];
+    for (const key of Object.keys(record)) {
+      const entry = record[key];
+      if (Array.isArray(entry)) {
+        values.push(...entry.map((item) => String(item)));
+      } else if (entry && typeof entry === 'object') {
+        values.push(...this.flattenRecordValues(entry));
+      } else if (entry) {
+        values.push(String(entry));
+      }
+    }
+    return values;
+  }
+
+  private normalize(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  private buildReason(matches: string[], modelName: string, viewpointName: string): string {
+    if (!matches.length) {
+      return `Selected ${viewpointName} in ${modelName}.`;
+    }
+
+    const highlights = matches.slice(0, 3).map((item) => item.toLowerCase());
+    return `Matched ${highlights.join(', ')} → ${viewpointName} (${modelName}).`;
   }
 }
 

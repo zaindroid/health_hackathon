@@ -147,6 +147,13 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
         }
         break;
 
+      case 'viewer_model':
+        if (message.viewerModel) {
+          console.log('🧭 Received viewer model update:', message.viewerModel);
+          loadBioDigitalModel(message.viewerModel);
+        }
+        break;
+
       default:
         console.warn('⚠️  Unknown message type:', message.type);
     }
@@ -374,6 +381,16 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
     });
     window.dispatchEvent(event);
     console.log('📹 Dispatched camera command event:', cameraCommand.action);
+  };
+
+  /**
+   * Notify 3D viewer to load a model
+   */
+  const loadBioDigitalModel = (viewerModel: NonNullable<ServerMessage['viewerModel']>) => {
+    const event = new CustomEvent('biodigital-load-model', {
+      detail: viewerModel,
+    });
+    window.dispatchEvent(event);
   };
 
   /**
