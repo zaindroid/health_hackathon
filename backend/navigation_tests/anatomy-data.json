@@ -1,0 +1,251 @@
+{
+  "models": [
+    {
+      "id": "neck_shoulders_upper_back",
+      "name": "Neck, Shoulders & Upper Back",
+      "biodigitalUrl": "https://human.biodigital.com/viewer/?id=6cr6&ui-anatomy-descriptions=true&ui-anatomy-pronunciations=true&ui-anatomy-labels=true&ui-audio=true&ui-chapter-list=false&ui-fullscreen=true&ui-help=true&ui-info=true&ui-label-list=true&ui-layers=true&ui-skin-layers=true&ui-loader=circle&ui-media-controls=full&ui-menu=true&ui-nav=true&ui-search=true&ui-tools=true&ui-tutorial=false&ui-undo=true&ui-whiteboard=true&initial.none=true&disable-scroll=false&uaid=ML3xE&paid=o_22e32b94",
+      "description": "Detailed anatomy of the neck, shoulder, and upper back region showing muscles, bones, and connective tissues",
+      "viewpoints": [
+        {
+          "id": "front",
+          "name": "Front View",
+          "buttonLabel": "Front View",
+          "camera": {
+            "position": { "x": 1.52, "y": 161.48, "z": -62.83 },
+            "target": { "x": 1.03, "y": 158.82, "z": -15.39 }
+          },
+          "anatomyVisible": {
+            "muscles": ["Sternocleidomastoid", "Trapezius (anterior)", "Deltoid (anterior)", "Pectoralis major (upper)"],
+            "bones": ["Clavicle", "Sternum", "Cervical vertebrae", "Scapula"],
+            "regions": ["Neck (anterior)", "Shoulders", "Upper chest"]
+          },
+          "description": "Frontal view of the neck and shoulder region showing anterior muscles and bone structure",
+          "clinicalContext": "Essential for understanding neck tension, forward head posture, and anterior shoulder pain. Helps identify muscle imbalances that contribute to neck knots and jaw aches.",
+          "commonUseCases": [
+            "Diagnosing tech neck and forward head posture",
+            "Understanding TMJ (jaw) pain referral patterns",
+            "Identifying anterior shoulder impingement",
+            "Planning massage therapy for neck tension"
+          ]
+        },
+        {
+          "id": "right_shoulder",
+          "name": "Right Shoulder",
+          "buttonLabel": "Right Shoulder",
+          "camera": {
+            "position": { "x": 43.13, "y": 157.51, "z": 17.08 },
+            "target": { "x": -6.15, "y": 155.61, "z": 1.95 }
+          },
+          "anatomyVisible": {
+            "muscles": ["Deltoid", "Rotator cuff muscles", "Trapezius", "Supraspinatus", "Infraspinatus"],
+            "bones": ["Scapula", "Humerus", "Clavicle"],
+            "regions": ["Right shoulder joint", "Shoulder girdle"],
+            "specialFeatures": ["Rotator cuff", "Shoulder capsule", "Acromion"]
+          },
+          "description": "Lateral view of the right shoulder showing rotator cuff and shoulder stabilizers",
+          "clinicalContext": "Critical for diagnosing rotator cuff injuries, shoulder impingement, and frozen shoulder. Shows the complex interplay of muscles that stabilize and move the shoulder joint.",
+          "commonUseCases": [
+            "Rotator cuff tear assessment",
+            "Shoulder impingement syndrome diagnosis",
+            "Understanding shoulder instability",
+            "Planning physical therapy for shoulder rehabilitation"
+          ]
+        },
+        {
+          "id": "back",
+          "name": "Back of Shoulder and Neck",
+          "buttonLabel": "Back View",
+          "camera": {
+            "position": { "x": -3.45, "y": 149.66, "z": 62.83 },
+            "target": { "x": 1.04, "y": 152.04, "z": 10.25 }
+          },
+          "anatomyVisible": {
+            "muscles": ["Trapezius (upper, middle, lower)", "Levator scapulae", "Rhomboids", "Latissimus dorsi (upper)", "Erector spinae (cervical)"],
+            "bones": ["Scapulae", "Cervical vertebrae", "Thoracic vertebrae (upper)", "Occipital bone"],
+            "regions": ["Upper back", "Posterior neck", "Shoulder blades"],
+            "specialFeatures": ["Muscle trigger points", "Scapular stabilizers"]
+          },
+          "description": "Posterior view highlighting upper back muscles and neck extensors",
+          "clinicalContext": "Most relevant for addressing upper back tension, neck knots, and scapular winging. This view is essential for massage therapists and chiropractors treating upper body pain and poor posture.",
+          "commonUseCases": [
+            "Treating chronic neck knots and tension headaches",
+            "Addressing upper back pain from desk work",
+            "Correcting rounded shoulder posture",
+            "Identifying trigger points causing referred pain to jaw and head",
+            "Understanding scapular dyskinesis"
+          ]
+        },
+        {
+          "id": "left_shoulder",
+          "name": "Left Shoulder",
+          "buttonLabel": "Left Shoulder",
+          "camera": {
+            "position": { "x": -43.28, "y": 156.10, "z": 15.81 },
+            "target": { "x": 7.69, "y": 152.03, "z": 2.56 }
+          },
+          "anatomyVisible": {
+            "muscles": ["Deltoid", "Rotator cuff muscles", "Trapezius", "Supraspinatus", "Infraspinatus"],
+            "bones": ["Scapula", "Humerus", "Clavicle"],
+            "regions": ["Left shoulder joint", "Shoulder girdle"],
+            "specialFeatures": ["Rotator cuff", "Shoulder capsule", "Acromion"]
+          },
+          "description": "Lateral view of the left shoulder showing rotator cuff and shoulder stabilizers",
+          "clinicalContext": "Mirror view of the right shoulder, essential for comparing bilateral shoulder anatomy and identifying asymmetries that may contribute to pain or dysfunction.",
+          "commonUseCases": [
+            "Comparing left vs right shoulder anatomy",
+            "Bilateral rotator cuff assessment",
+            "Understanding asymmetric shoulder mechanics",
+            "Planning symmetric rehabilitation programs"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skeletal_system",
+      "name": "Male Skeletal System",
+      "biodigitalUrl": "https://human.biodigital.com/viewer/?id=production/maleAdult/male_system_anatomy_skeletal_09&ui-info=true&dk=c0c3685a4e0996e0095ae1a7d7cb46079b9db70a",
+      "description": "Complete skeletal system showing all major bones of the human body",
+      "viewpoints": [
+        {
+          "id": "front",
+          "name": "Front View",
+          "buttonLabel": "Front View",
+          "camera": {
+            "position": { "x": -0.98, "y": 83.22, "z": -196.40 },
+            "target": { "x": -0.98, "y": 83.22, "z": -16.40 }
+          },
+          "anatomyVisible": {
+            "bones": ["Skull", "Clavicle", "Sternum", "Ribs", "Pelvis", "Femur", "Tibia", "Fibula"],
+            "regions": ["Cranium", "Thorax", "Upper limbs", "Lower limbs"]
+          },
+          "description": "Full frontal view of the skeletal system showing the anterior perspective of all major bones",
+          "clinicalContext": "This view is essential for identifying anterior bone structures, assessing symmetry, and evaluating conditions like scoliosis or pelvic tilt. Medical students use this to learn bone names and positions.",
+          "commonUseCases": [
+            "Learning basic skeletal anatomy",
+            "Identifying fractures in frontal X-rays",
+            "Understanding bone alignment and posture"
+          ]
+        },
+        {
+          "id": "side",
+          "name": "Side View",
+          "buttonLabel": "Side View",
+          "camera": {
+            "position": { "x": 187.77, "y": 129.69, "z": 8.24 },
+            "target": { "x": -0.57, "y": 91.37, "z": 0.62 }
+          },
+          "anatomyVisible": {
+            "bones": ["Vertebral column", "Skull (lateral)", "Ribs (lateral)", "Pelvis (lateral)", "Femur", "Tibia"],
+            "regions": ["Spine", "Thorax", "Cranium"],
+            "specialFeatures": ["Spinal curvatures (cervical, thoracic, lumbar, sacral)"]
+          },
+          "description": "Lateral view emphasizing the vertebral column and spinal curvatures",
+          "clinicalContext": "Critical for assessing spinal curvatures (lordosis, kyphosis), evaluating vertebral alignment, and understanding the natural S-curve of the spine. Essential for chiropractors and orthopedic specialists.",
+          "commonUseCases": [
+            "Diagnosing spinal deformities",
+            "Understanding spinal biomechanics",
+            "Planning spinal surgeries"
+          ]
+        },
+        {
+          "id": "head",
+          "name": "Head Close-up",
+          "buttonLabel": "Head Close-up",
+          "camera": {
+            "position": { "x": 0.82, "y": 158.39, "z": -37.17 },
+            "target": { "x": 0.56, "y": 158.11, "z": -26.75 }
+          },
+          "anatomyVisible": {
+            "bones": ["Frontal bone", "Parietal bones", "Temporal bones", "Occipital bone", "Maxilla", "Mandible", "Zygomatic bones"],
+            "regions": ["Cranium", "Facial skeleton"],
+            "specialFeatures": ["Sutures", "Eye sockets (orbits)", "Nasal cavity"]
+          },
+          "description": "Detailed view of the skull and facial bones",
+          "clinicalContext": "Important for dental professionals, maxillofacial surgeons, and neurologists. Used to understand cranial bone structure, identify fracture points, and plan reconstructive surgeries.",
+          "commonUseCases": [
+            "Dental and orthodontic planning",
+            "Identifying skull fractures",
+            "Understanding brain protection and cranial anatomy",
+            "Forensic identification"
+          ]
+        },
+        {
+          "id": "legs",
+          "name": "Lower Body View",
+          "buttonLabel": "Lower Body View",
+          "camera": {
+            "position": { "x": 0.98, "y": 40.80, "z": -102.55 },
+            "target": { "x": -2.53, "y": 46.99, "z": -12.77 }
+          },
+          "anatomyVisible": {
+            "bones": ["Pelvis", "Femur", "Patella", "Tibia", "Fibula", "Tarsal bones", "Metatarsals"],
+            "regions": ["Pelvic girdle", "Thigh", "Lower leg", "Foot"],
+            "joints": ["Hip joint", "Knee joint", "Ankle joint"]
+          },
+          "description": "Focused view of the lower extremities and pelvic region",
+          "clinicalContext": "Essential for orthopedic surgeons and physical therapists working with hip replacements, knee injuries, or gait analysis. Critical for understanding weight-bearing mechanics and lower limb biomechanics.",
+          "commonUseCases": [
+            "Hip replacement planning",
+            "Knee injury assessment (ACL, meniscus)",
+            "Analyzing walking and running biomechanics",
+            "Diagnosing leg length discrepancies"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "muscular_system",
+      "name": "Male Muscular System",
+      "biodigitalUrl": "https://human.biodigital.com/viewer/?id=production/maleAdult/male_system_anatomy_muscular&ui-info=true&dk=c0c3685a4e0996e0095ae1a7d7cb46079b9db70a",
+      "description": "Complete muscular system showing major muscle groups",
+      "viewpoints": [
+        {
+          "id": "front",
+          "name": "Anterior Muscles",
+          "buttonLabel": "Front View",
+          "camera": {
+            "position": { "x": 0, "y": 85, "z": -200 },
+            "target": { "x": 0, "y": 85, "z": 0 }
+          },
+          "anatomyVisible": {
+            "muscles": ["Pectoralis major", "Rectus abdominis", "Deltoid", "Biceps brachii", "Quadriceps", "Tibialis anterior"],
+            "regions": ["Chest", "Abdomen", "Arms", "Thighs"]
+          },
+          "description": "Frontal view showing major anterior muscle groups",
+          "clinicalContext": "Key for personal trainers and physical therapists understanding muscle imbalances, planning strength training, and rehabilitation after injury. Shows muscles involved in pushing movements.",
+          "commonUseCases": [
+            "Strength training program design",
+            "Identifying muscle tears or strains",
+            "Understanding posture and core stability"
+          ]
+        },
+        {
+          "id": "back",
+          "name": "Posterior Muscles",
+          "buttonLabel": "Back View",
+          "camera": {
+            "position": { "x": 0, "y": 85, "z": 200 },
+            "target": { "x": 0, "y": 85, "z": 0 }
+          },
+          "anatomyVisible": {
+            "muscles": ["Trapezius", "Latissimus dorsi", "Erector spinae", "Gluteus maximus", "Hamstrings", "Gastrocnemius"],
+            "regions": ["Upper back", "Lower back", "Glutes", "Posterior thigh", "Calves"]
+          },
+          "description": "Posterior view emphasizing back and posterior chain muscles",
+          "clinicalContext": "Critical for understanding pulling movements, back pain sources, and posterior chain development. Essential for treating lower back pain and improving athletic performance.",
+          "commonUseCases": [
+            "Back pain diagnosis and treatment",
+            "Athletic training (sprinting, jumping)",
+            "Posture correction"
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2025-11-05",
+    "author": "Anatomy Viewer Project",
+    "description": "Database of anatomical models with predefined viewpoints and educational context"
+  }
+}

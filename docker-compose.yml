@@ -1,0 +1,78 @@
+# Docker Compose Configuration (Placeholder)
+# For local development and testing
+
+version: '3.8'
+
+services:
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - HOST=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - voice-agent-network
+
+  # Frontend (Development Server)
+  frontend:
+    image: node:18-alpine
+    working_dir: /app
+    command: npm run dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_WS_URL=ws://localhost:3001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - voice-agent-network
+
+  # TODO: Add vector database for RAG (uncomment when implementing)
+  # weaviate:
+  #   image: semitechnologies/weaviate:latest
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+  #     - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+  #   volumes:
+  #     - weaviate_data:/var/lib/weaviate
+  #   networks:
+  #     - voice-agent-network
+
+  # TODO: Add Redis for caching (uncomment when needed)
+  # redis:
+  #   image: redis:alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - voice-agent-network
+
+networks:
+  voice-agent-network:
+    driver: bridge
+
+# volumes:
+#   weaviate_data:
+#   redis_data:
