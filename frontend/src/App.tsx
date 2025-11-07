@@ -7,9 +7,10 @@ import { useState } from 'react';
 import { VoiceInterface } from './components/VoiceInterface';
 import { BioDigitalViewer } from './components/BioDigitalViewer';
 import { VideoAnalysis } from './components/VideoAnalysis';
+import { MedicalScanner } from './components/MedicalScanner';
 import './App.css';
 
-type Tab = 'voice-3d' | 'video-analysis' | 'dashboard';
+type Tab = 'voice-3d' | 'medical-scanner' | 'video-analysis' | 'dashboard';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('voice-3d');
@@ -42,10 +43,16 @@ function App() {
             label="Voice & 3D Anatomy"
           />
           <TabButton
+            active={activeTab === 'medical-scanner'}
+            onClick={() => setActiveTab('medical-scanner')}
+            icon="🔬"
+            label="Medical Face Scanner"
+          />
+          <TabButton
             active={activeTab === 'video-analysis'}
             onClick={() => setActiveTab('video-analysis')}
             icon="📹"
-            label="Video Health Analysis"
+            label="Heart Rate Monitor"
           />
           <TabButton
             active={activeTab === 'dashboard'}
@@ -69,6 +76,22 @@ function App() {
             <div style={{ flex: 1, height: '100%', borderLeft: '1px solid #e5e7eb', backgroundColor: '#fff' }}>
               <VoiceInterface />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'medical-scanner' && (
+          <div style={{ height: '100%', width: '100%', overflow: 'auto', backgroundColor: '#fff' }}>
+            <MedicalScanner
+              onAnatomyTarget={(target) => {
+                // Auto-switch to 3D anatomy view when finding detected
+                console.log('🎯 Anatomy target:', target);
+                // Could implement tab switch + navigation here
+              }}
+              onVoiceGuidance={(text) => {
+                console.log('🗣️ Voice guidance:', text);
+                // Could trigger voice agent to speak this
+              }}
+            />
           </div>
         )}
 
