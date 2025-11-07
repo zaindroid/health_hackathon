@@ -214,7 +214,7 @@ function App() {
         {/* Report Upload Screen */}
         {currentScreen === 'report_upload' && (
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            <ReportUpload />
+            <ReportUpload sessionId={sessionInfo?.sessionId} />
           </div>
         )}
 

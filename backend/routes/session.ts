@@ -11,6 +11,7 @@ import pdfParse from 'pdf-parse';
 import fs from 'fs';
 import sessionOrchestrator from '../services/sessionOrchestrator';
 import { kbRetriever } from '../rag/retriever_bedrock';
+import { getLLMProvider } from '../llm';
 
 const router: Router = express.Router();
 
@@ -424,7 +425,7 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
 
     console.log(`✅ PDF parsed: ${text.length} characters extracted`);
 
-    // Analyze report using RAG
+    // Analyze report using RAG or LLM
     let analysis = 'Report uploaded successfully. Analysis pending.';
 
     if (kbRetriever.isReady()) {
@@ -433,8 +434,67 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
       analysis = result.analysis;
       console.log('✅ Report analysis complete');
     } else {
-      console.warn('⚠️  RAG not configured, skipping analysis');
-      analysis = 'Report uploaded. Enable AWS Bedrock Knowledge Base for detailed analysis.';
+      // Use LLM directly for analysis when RAG not configured
+      console.log('🤖 Analyzing report with LLM...');
+      const llmProvider = getLLMProvider();
+      if (llmProvider.isConfigured()) {
+        try {
+          // Truncate text if too long (keep first 3000 chars for analysis)
+          const textToAnalyze = text.length > 3000 ? text.substring(0, 3000) + '...' : text;
+
+          const analysisPrompt = `Analyze this medical report and provide a simple explanation:
+
+REPORT TEXT:
+${textToAnalyze}
+
+Provide analysis in this exact format:
+{
+  "utterance": "Brief summary of the report (2-3 sentences)",
+  "intent": "report_analysis",
+  "findings": {
+    "normal": ["List of normal/healthy findings"],
+    "abnormal": ["List of concerning/abnormal findings"],
+    "action": "rest | monitor | see_doctor | urgent_care"
+  }
+}
+
+Make it simple and easy to understand. Focus on what's fine vs what needs attention.`;
+
+          const llmResponse = await llmProvider.generateResponse(analysisPrompt);
+
+          // Extract findings from response
+          if (llmResponse.utterance) {
+            analysis = llmResponse.utterance;
+
+            // If we have structured findings, format them nicely
+            if ((llmResponse as any).findings) {
+              const findings = (llmResponse as any).findings;
+              let formattedAnalysis = llmResponse.utterance + '\n\n';
+
+              if (findings.normal && findings.normal.length > 0) {
+                formattedAnalysis += '✅ What\'s Fine:\n' + findings.normal.map((f: string) => `• ${f}`).join('\n') + '\n\n';
+              }
+
+              if (findings.abnormal && findings.abnormal.length > 0) {
+                formattedAnalysis += '⚠️ Needs Attention:\n' + findings.abnormal.map((f: string) => `• ${f}`).join('\n') + '\n\n';
+              }
+
+              if (findings.action) {
+                formattedAnalysis += `📋 Recommendation: ${findings.action.replace('_', ' ')}`;
+              }
+
+              analysis = formattedAnalysis;
+            }
+          }
+          console.log('✅ LLM analysis complete');
+        } catch (llmError) {
+          console.error('❌ LLM analysis failed:', llmError);
+          analysis = 'Report uploaded successfully. Basic analysis: ' + text.substring(0, 200) + '...';
+        }
+      } else {
+        console.warn('⚠️  Neither RAG nor LLM configured');
+        analysis = 'Report uploaded. Please configure AWS Bedrock for analysis.';
+      }
     }
 
     // Store in session

@@ -5,9 +5,15 @@
 
 import { useState } from 'react';
 
-export function ReportUpload() {
+interface ReportUploadProps {
+  sessionId?: string;
+}
+
+export function ReportUpload({ sessionId }: ReportUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -16,24 +22,42 @@ export function ReportUpload() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setError('Please select a file first');
+      return;
+    }
+
+    if (!sessionId) {
+      setError('No active session. Please start talking first.');
+      return;
+    }
 
     setUploading(true);
+    setError(null);
+    setAnalysis(null);
+
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('sessionId', sessionId);
 
-      const response = await fetch('http://localhost:3001/api/upload/report', {
+      console.log('📤 Uploading report...');
+      const response = await fetch('http://localhost:3001/api/session/upload-report', {
         method: 'POST',
         body: formData,
       });
 
       const data = await response.json();
-      console.log('✅ Report uploaded:', data);
 
-      // TODO: Handle successful upload - show analysis
+      if (data.success) {
+        console.log('✅ Report uploaded and analyzed:', data);
+        setAnalysis(data.analysis);
+      } else {
+        setError(data.error || 'Failed to process report');
+      }
     } catch (error) {
       console.error('❌ Error uploading report:', error);
+      setError('Network error. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -156,20 +180,93 @@ export function ReportUpload() {
           {uploading ? 'Uploading...' : 'Upload & Analyze'}
         </button>
 
+        {/* Error Display */}
+        {error && (
+          <div
+            style={{
+              backgroundColor: '#fee2e2',
+              border: '1px solid #ef4444',
+              color: '#dc2626',
+              padding: '1rem',
+              borderRadius: '8px',
+              marginTop: '1.5rem',
+              fontSize: '14px',
+            }}
+          >
+            ⚠️ {error}
+          </div>
+        )}
+
         {/* Info Text */}
-        <p
+        {!analysis && (
+          <p
+            style={{
+              fontSize: '13px',
+              color: '#94a3b8',
+              marginTop: '2rem',
+              lineHeight: '1.5',
+            }}
+          >
+            I'll analyze your report and explain the results in simple terms.
+            <br />
+            Keep talking with me via voice while viewing the analysis.
+          </p>
+        )}
+      </div>
+
+      {/* Analysis Results */}
+      {analysis && (
+        <div
           style={{
-            fontSize: '13px',
-            color: '#94a3b8',
+            maxWidth: '800px',
+            width: '100%',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
             marginTop: '2rem',
-            lineHeight: '1.5',
+            textAlign: 'left',
           }}
         >
-          I'll analyze your report and explain the results in simple terms.
-          <br />
-          Keep talking with me via voice while viewing the analysis.
-        </p>
-      </div>
+          <h3
+            style={{
+              fontSize: '24px',
+              marginBottom: '1.5rem',
+              color: '#1e293b',
+              borderBottom: '2px solid #e2e8f0',
+              paddingBottom: '0.75rem',
+            }}
+          >
+            📊 Report Analysis
+          </h3>
+
+          <div
+            style={{
+              fontSize: '15px',
+              lineHeight: '1.8',
+              color: '#475569',
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            {analysis}
+          </div>
+
+          <div
+            style={{
+              marginTop: '2rem',
+              padding: '1rem',
+              backgroundColor: '#f0f9ff',
+              borderLeft: '4px solid #3b82f6',
+              borderRadius: '4px',
+            }}
+          >
+            <p style={{ fontSize: '14px', color: '#1e40af', margin: 0 }}>
+              💬 <strong>Continue with voice:</strong> Ask me questions about your report,
+              or say "check my vitals" for a comprehensive health assessment.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
