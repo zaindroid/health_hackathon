@@ -1,12 +1,23 @@
 /**
  * Voice Interface Component
- * Minimal UI for voice interaction testing
+ * Voice-first interaction with initial greeting support
  */
 
 import { useVoiceAgent } from '../hooks/useVoiceAgent';
+import { useEffect } from 'react';
 import './VoiceInterface.css';
 
-export function VoiceInterface() {
+interface VoiceInterfaceProps {
+  sessionInfo?: {
+    sessionId: string;
+    role: 'patient' | 'doctor';
+    useCase?: string;
+  };
+  onSessionReady?: (role: 'patient' | 'doctor', useCase?: string) => void;
+  isInitialGreeting?: boolean;
+}
+
+export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting = false }: VoiceInterfaceProps) {
   const {
     isConnected,
     isRecording,
@@ -18,12 +29,156 @@ export function VoiceInterface() {
     clearTranscript,
   } = useVoiceAgent();
 
+  // Auto-start recording in initial greeting mode
+  useEffect(() => {
+    if (isInitialGreeting && isConnected && !isRecording) {
+      // Small delay to let user see the interface
+      const timer = setTimeout(() => {
+        startRecording();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialGreeting, isConnected, isRecording]);
+
   // Get final transcripts only
   const finalTranscripts = transcript.filter((t) => t.isFinal);
 
   // Get interim transcript (most recent)
   const interimTranscript = transcript.find((t) => !t.isFinal);
 
+  // Initial greeting mode - simplified UI
+  if (isInitialGreeting) {
+    return (
+      <div className="voice-interface" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', alignItems: 'center', padding: '40px' }}>
+        {/* Welcoming header */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '36px', marginBottom: '16px' }}>👋 Welcome!</h1>
+          <p style={{ fontSize: '20px', color: '#666', marginBottom: '8px' }}>
+            I'm your AI health assistant
+          </p>
+          <p style={{ fontSize: '16px', color: '#888' }}>
+            How may I help you today?
+          </p>
+        </div>
+
+        {/* Recording indicator */}
+        {isRecording && (
+          <div style={{
+            padding: '20px 40px',
+            backgroundColor: '#eff6ff',
+            borderRadius: '12px',
+            border: '2px solid #3b82f6',
+            marginBottom: '30px',
+            animation: 'pulse 2s infinite'
+          }}>
+            <div style={{ fontSize: '18px', color: '#1e40af', fontWeight: '500' }}>
+              🎤 Listening...
+            </div>
+          </div>
+        )}
+
+        {/* Connection status */}
+        <div style={{ fontSize: '14px', color: isConnected ? '#10b981' : '#ef4444', marginBottom: '20px' }}>
+          {isConnected ? '🟢 Connected - Ready to listen' : '🔴 Connecting...'}
+        </div>
+
+        {/* Error display */}
+        {error && (
+          <div style={{
+            padding: '16px 24px',
+            backgroundColor: '#fee2e2',
+            color: '#991b1b',
+            borderRadius: '8px',
+            marginBottom: '20px'
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Transcript display */}
+        {finalTranscripts.length > 0 && (
+          <div style={{
+            width: '100%',
+            maxWidth: '600px',
+            marginTop: '30px',
+            padding: '20px',
+            backgroundColor: '#f9fafb',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px', fontWeight: '500' }}>
+              You said:
+            </div>
+            {finalTranscripts.map((t, idx) => (
+              <div key={idx} style={{ fontSize: '16px', color: '#111827', marginBottom: '8px' }}>
+                {t.text}
+              </div>
+            ))}
+            {interimTranscript && (
+              <div style={{ fontSize: '16px', color: '#9ca3af', fontStyle: 'italic' }}>
+                {interimTranscript.text}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI Response */}
+        {llmResponse && (
+          <div style={{
+            width: '100%',
+            maxWidth: '600px',
+            marginTop: '20px',
+            padding: '20px',
+            backgroundColor: '#eff6ff',
+            borderRadius: '8px',
+            border: '1px solid #3b82f6'
+          }}>
+            <div style={{ fontSize: '14px', color: '#1e40af', marginBottom: '12px', fontWeight: '500' }}>
+              🤖 AI Response:
+            </div>
+            <div style={{ fontSize: '16px', color: '#1e3a8a' }}>
+              {llmResponse.utterance}
+            </div>
+          </div>
+        )}
+
+        {/* Manual controls (if needed) */}
+        {!isRecording && (
+          <button
+            onClick={startRecording}
+            disabled={!isConnected}
+            style={{
+              marginTop: '30px',
+              padding: '16px 32px',
+              fontSize: '18px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: isConnected ? 'pointer' : 'not-allowed',
+              opacity: isConnected ? 1 : 0.5,
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (isConnected) {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            🎤 Start Talking
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Regular mode - full interface
   return (
     <div className="voice-interface">
       <div className="header">

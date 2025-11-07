@@ -129,15 +129,15 @@ export class VoiceSessionHandler {
       this.sendMessage({
         type: 'llm_response',
         llmResponse: {
-          utterance: 'Hello! I can help you explore 3D anatomy. Try saying "show me the front view" or ask me about any muscle or bone.',
-          intent: 'general_info',
+          utterance: 'Hello! Welcome to Health Helper. How may I help you today?',
+          intent: 'greeting',
         },
       });
 
       // Generate greeting audio if using Cartesia
       if (appConfig.ttsProvider === 'external' && this.ttsProvider.isConfigured()) {
         try {
-          const greetingText = 'Hello! I can help you explore 3D anatomy. Try saying show me the front view or ask me about any muscle or bone.';
+          const greetingText = 'Hello! Welcome to Health Helper. How may I help you today?';
           const audioBuffer = await this.ttsProvider.speak(greetingText);
 
           if (audioBuffer && Buffer.isBuffer(audioBuffer)) {
