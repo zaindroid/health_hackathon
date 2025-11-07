@@ -30,6 +30,9 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
     clearTranscript,
   } = useVoiceAgent();
 
+  // Get final transcripts only
+  const finalTranscripts = transcript.filter((t) => t.isFinal);
+
   // Auto-start recording in initial greeting mode
   useEffect(() => {
     if (isInitialGreeting && isConnected && !isRecording) {
@@ -42,18 +45,18 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
   }, [isInitialGreeting, isConnected, isRecording]);
 
   // Transition to main interface after first user interaction
+  // ONLY if user has actually spoken (finalTranscripts exist)
   useEffect(() => {
-    if (isInitialGreeting && llmResponse && onConversationStarted) {
-      // User has received their first response - transition after a delay
+    const userHasSpoken = finalTranscripts.length > 0;
+
+    if (isInitialGreeting && llmResponse && userHasSpoken && onConversationStarted) {
+      // User has spoken AND received a response - transition after a delay
       const timer = setTimeout(() => {
         onConversationStarted();
       }, 3000); // Give user 3 seconds to see the response
       return () => clearTimeout(timer);
     }
-  }, [isInitialGreeting, llmResponse, onConversationStarted]);
-
-  // Get final transcripts only
-  const finalTranscripts = transcript.filter((t) => t.isFinal);
+  }, [isInitialGreeting, llmResponse, finalTranscripts.length, onConversationStarted]);
 
   // Get interim transcript (most recent)
   const interimTranscript = transcript.find((t) => !t.isFinal);
