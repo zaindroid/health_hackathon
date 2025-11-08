@@ -65,7 +65,11 @@ cd ..
 # Install EB CLI if not present
 if ! command -v eb &> /dev/null; then
     echo "Installing Elastic Beanstalk CLI..."
-    pip install awsebcli
+    # Use virtual environment to avoid externally-managed-environment error
+    python3 -m venv /tmp/eb-venv
+    /tmp/eb-venv/bin/pip install awsebcli
+    # Add to PATH for this session
+    export PATH="/tmp/eb-venv/bin:$PATH"
 fi
 
 # Initialize EB application (if not exists)
