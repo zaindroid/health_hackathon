@@ -272,13 +272,32 @@ export function useVoiceAgent(): VoiceAgentState & VoiceAgentActions {
    * Set the database session ID for the voice WebSocket
    */
   const setSessionId = useCallback((sessionId: string) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'control',
-        action: 'set_session_id',
-        sessionId,
-      }));
-      console.log(`🔗 Sent session ID to voice handler: ${sessionId}`);
+    if (wsRef.current) {
+      if (wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'control',
+          action: 'set_session_id',
+          sessionId,
+        }));
+        console.log(`🔗 Sent session ID to voice handler: ${sessionId}`);
+      } else {
+        console.warn(`⚠️  WebSocket not open yet (state: ${wsRef.current.readyState}), will retry when connected`);
+        // Retry when connection opens
+        const sendWhenOpen = () => {
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+              type: 'control',
+              action: 'set_session_id',
+              sessionId,
+            }));
+            console.log(`🔗 Sent session ID to voice handler (delayed): ${sessionId}`);
+            wsRef.current.removeEventListener('open', sendWhenOpen);
+          }
+        };
+        wsRef.current.addEventListener('open', sendWhenOpen);
+      }
+    } else {
+      console.error(`❌ WebSocket not initialized, cannot set session ID`);
     }
   }, []);
 

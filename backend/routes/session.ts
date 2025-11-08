@@ -12,8 +12,8 @@ import sessionOrchestrator from '../services/sessionOrchestrator';
 import { kbRetriever } from '../rag/retriever_bedrock';
 import { getLLMProvider } from '../llm';
 
-// pdf-parse v2 exports PDFParse class
-const { PDFParse } = require('pdf-parse');
+// pdf-parse is a function that takes a buffer
+const pdfParse = require('pdf-parse');
 
 const router: Router = express.Router();
 
@@ -454,10 +454,9 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
 
     console.log(`📄 Processing PDF upload: ${file.originalname}`);
 
-    // Parse PDF using pdf-parse v2 API
+    // Parse PDF using pdf-parse
     const dataBuffer = await fs.promises.readFile(file.path);
-    const parser = new PDFParse({ data: dataBuffer });
-    const pdfData = await parser.getText();
+    const pdfData = await pdfParse(dataBuffer);
     const text = pdfData.text;
 
     console.log(`✅ PDF parsed: ${text.length} characters extracted`);
