@@ -99,7 +99,8 @@ fi
 if [ ! -d "backend/.elasticbeanstalk" ]; then
     echo "Initializing Elastic Beanstalk..."
     cd backend
-    eb init -p "Node.js 18" $APP_NAME --region $REGION
+    # Use Node.js platform branch (EB will select latest compatible version)
+    eb init -p node.js $APP_NAME --region $REGION
     cd ..
 fi
 
