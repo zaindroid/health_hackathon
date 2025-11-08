@@ -1,0 +1,11 @@
+# Python requirements for AWS deployment tools
+# Install with: pip install -r requirements-deploy.txt
+
+# AWS Elastic Beanstalk CLI
+awsebcli>=3.20.0
+
+# AWS CLI (if not already installed)
+awscli>=1.27.0
+
+# Botocore (AWS SDK core)
+botocore>=1.29.0
