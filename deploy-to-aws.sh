@@ -62,9 +62,21 @@ zip -r ../$BACKEND_ZIP . \
   -x "node_modules/*" \
   -x ".git/*" \
   -x "*.db" \
+  -x "*.db-shm" \
+  -x "*.db-wal" \
   -x "uploads/*" \
   -x "dist/*" \
-  -x ".env*"
+  -x ".env*" \
+  -x ".elasticbeanstalk/*" \
+  -x "venv/*" \
+  -x "venv-deploy/*" \
+  -x "python-services/venv/*" \
+  -x "*__pycache__*" \
+  -x "*.pyc" \
+  -x "*.pyo" \
+  -x "*:Zone.Identifier" \
+  -x "video health signals/*" \
+  -x "navigation_tests/*"
 
 cd ..
 
