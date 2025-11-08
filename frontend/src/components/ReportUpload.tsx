@@ -64,6 +64,127 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
     }
   };
 
+  // Show loading screen during upload
+  if (uploading) {
+    return (
+      <div
+        style={{
+          height: '100%',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          backgroundColor: '#f5f5f5',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '500px',
+            width: '100%',
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '3rem',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+            textAlign: 'center',
+          }}
+        >
+          {/* Animated spinner */}
+          <div
+            style={{
+              width: '60px',
+              height: '60px',
+              margin: '0 auto 2rem',
+              border: '4px solid #e2e8f0',
+              borderTop: '4px solid #667eea',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }}
+          />
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+
+          <h3 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '1rem' }}>
+            Analyzing Your Report
+          </h3>
+          <p style={{ fontSize: '15px', color: '#64748b', lineHeight: '1.6' }}>
+            Please wait while I read and analyze your medical report...
+          </p>
+
+          {selectedFile && (
+            <div
+              style={{
+                marginTop: '2rem',
+                padding: '1rem',
+                backgroundColor: '#f8fafc',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#475569',
+              }}
+            >
+              📄 {selectedFile.name}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // If analysis is complete, show full-screen report analysis
+  if (analysis) {
+    return (
+      <div
+        style={{
+          height: '100vh',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '1rem',
+          backgroundColor: '#f5f5f5',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
+        {/* Back button */}
+        <div style={{ maxWidth: '900px', width: '100%', marginBottom: '0.5rem' }}>
+          <button
+            onClick={() => {
+              setAnalysis(null);
+              setSelectedFile(null);
+              setError(null);
+            }}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: 'white',
+              color: '#475569',
+              border: '2px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f8fafc';
+              e.currentTarget.style.borderColor = '#cbd5e1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.borderColor = '#e2e8f0';
+            }}
+          >
+            ← Upload Another Report
+          </button>
+        </div>
+
+        {/* Report Analysis */}
+        <ReportInfographic analysisText={analysis} />
+      </div>
+    );
+  }
+
+  // Show upload screen
   return (
     <div
       style={{
@@ -199,24 +320,19 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
         )}
 
         {/* Info Text */}
-        {!analysis && (
-          <p
-            style={{
-              fontSize: '13px',
-              color: '#94a3b8',
-              marginTop: '2rem',
-              lineHeight: '1.5',
-            }}
-          >
-            I'll analyze your report and explain the results in simple terms.
-            <br />
-            Keep talking with me via voice while viewing the analysis.
-          </p>
-        )}
+        <p
+          style={{
+            fontSize: '13px',
+            color: '#94a3b8',
+            marginTop: '2rem',
+            lineHeight: '1.5',
+          }}
+        >
+          I'll analyze your report and explain the results in simple terms.
+          <br />
+          Keep talking with me via voice while viewing the analysis.
+        </p>
       </div>
-
-      {/* Analysis Results - Interactive Infographic */}
-      {analysis && <ReportInfographic analysisText={analysis} />}
     </div>
   );
 }

@@ -167,7 +167,8 @@ RESPONSE FORMAT (JSON):
 }
 
 The tool_action and body_part fields are optional - include only when relevant.
-When user agrees to vitals check, use intent="vitals_consent_yes" and tool_action={"op": "start_video_vitals"}`;
+When user agrees to vitals check, use intent="vitals_consent_yes" and tool_action={"op": "start_video_vitals"}.
+When user declines vitals check, use intent="vitals_consent_no" and respond with: "No problem! Feel free to ask me any questions about your report or anything else I can help with."`;
   }
 
   /**
@@ -201,10 +202,12 @@ When user agrees to vitals check, use intent="vitals_consent_yes" and tool_actio
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
+        // Return the entire parsed object, preserving all fields (findings, report_type, etc.)
         return {
           utterance: parsed.utterance || responseText,
           intent: parsed.intent,
           tool_action: parsed.tool_action,
+          ...parsed, // Spread all other fields from the parsed response
         };
       }
 

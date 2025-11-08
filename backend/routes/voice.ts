@@ -299,6 +299,14 @@ Be specific and reassuring. Connect the dots between their test results and curr
           type: 'start_video_vitals',
         });
         console.log(`📹 Video vitals request sent to frontend`);
+      } else if (llmResponse.intent === 'vitals_consent_no') {
+        console.log(`❌ User declined vitals check`);
+
+        // Send message to frontend to show alternative options
+        this.sendMessage({
+          type: 'vitals_declined',
+        });
+        console.log(`📝 Vitals declined - offering alternatives`);
       }
 
       // Tool actions...

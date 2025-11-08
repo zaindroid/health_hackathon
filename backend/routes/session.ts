@@ -480,42 +480,76 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
           // Truncate text if too long (keep first 3000 chars for analysis)
           const textToAnalyze = text.length > 3000 ? text.substring(0, 3000) + '...' : text;
 
-          const analysisPrompt = `You are analyzing a medical report. Read it carefully and provide a comprehensive analysis.
+          const analysisPrompt = `You are analyzing a medical report. Read it carefully and provide a comprehensive analysis in JSON format.
 
 REPORT TEXT:
 ${textToAnalyze}
 
-INSTRUCTIONS:
+CRITICAL INSTRUCTIONS:
 1. Identify the report type (CBC, metabolic panel, lipid panel, imaging, etc.)
-2. For EACH lab value, state if it's NORMAL or ABNORMAL with the range
-3. Explain what abnormal values mean in simple terms
-4. Provide clear recommendations
+2. For EACH lab value, you MUST include the exact numeric range in parentheses
+3. Format MUST be: "Name Value Unit - STATUS (min-max)"
+4. Examples:
+   - "Hemoglobin 14.5 g/dL - NORMAL (12-16)"
+   - "Glucose 126 mg/dL - HIGH (70-100)"
+   - "Vitamin B12 150 pg/mL - LOW (200-900)"
+5. Status must be: NORMAL, HIGH, LOW, ELEVATED, or DECREASED
+6. ALWAYS include min-max range in parentheses with a dash between numbers
 
-Provide analysis in this exact format:
+REQUIRED JSON FORMAT (respond with ONLY valid JSON, no markdown, no extra text):
 {
-  "utterance": "This is a [report type]. I've reviewed your results and identified what's normal and what needs attention.",
+  "utterance": "Brief 1-2 sentence summary of the report and key findings",
   "intent": "report_analysis",
   "report_type": "Complete Blood Count | Metabolic Panel | Lipid Panel | etc",
   "findings": {
-    "normal": ["Hemoglobin 14.5 g/dL - NORMAL (12-16)", "White blood cells 7,200 - NORMAL (4,500-11,000)"],
-    "abnormal": ["Cholesterol 240 mg/dL - HIGH (normal <200). Consider dietary changes.", "Glucose 126 mg/dL - ELEVATED (normal 70-100). Pre-diabetes concern."],
-    "action": "see_doctor"
+    "normal": ["Hemoglobin 14.5 g/dL - NORMAL (12-16)", "WBC 7200 /uL - NORMAL (4500-11000)"],
+    "abnormal": ["Cholesterol 240 mg/dL - HIGH (0-200)", "Glucose 126 mg/dL - ELEVATED (70-100)"],
+    "action": "rest | monitor | see_doctor | urgent_care"
   }
 }
 
-Be specific with numbers and ranges. Say NORMAL or ABNORMAL clearly.`;
+Return ONLY the JSON object, no code blocks, no markdown formatting.`;
 
           const llmResponse = await llmProvider.generateResponse(analysisPrompt);
+          console.log('📊 LLM Response type:', typeof llmResponse);
+          console.log('📊 LLM Response:', JSON.stringify(llmResponse).substring(0, 300));
+
+          // Handle cases where LLM returns JSON as a string in utterance
+          let parsedResponse = llmResponse;
+
+          // Check if utterance contains JSON string
+          if (llmResponse.utterance && typeof llmResponse.utterance === 'string') {
+            const utteranceStr = llmResponse.utterance.trim();
+            if (utteranceStr.startsWith('{')) {
+              try {
+                // Try to parse the utterance as JSON
+                const parsed = JSON.parse(utteranceStr);
+                if (parsed.findings) {
+                  console.log('✅ Parsed JSON from utterance string');
+                  parsedResponse = parsed;
+                }
+              } catch (e) {
+                console.log('⚠️  Utterance looks like JSON but failed to parse');
+              }
+            }
+          }
 
           // Return structured JSON for frontend to display as infographic
-          if (llmResponse.utterance) {
+          if (parsedResponse.utterance) {
             // If we have structured findings, return as JSON for ReportInfographic component
-            if ((llmResponse as any).findings) {
-              analysis = JSON.stringify(llmResponse);
+            if ((parsedResponse as any).findings) {
+              analysis = JSON.stringify(parsedResponse);
+              console.log('✅ Returning structured JSON analysis');
+              console.log('📊 Normal values:', (parsedResponse as any).findings.normal?.length || 0);
+              console.log('📊 Abnormal values:', (parsedResponse as any).findings.abnormal?.length || 0);
             } else {
               // Fallback to text if no structured data
-              analysis = llmResponse.utterance;
+              analysis = parsedResponse.utterance;
+              console.warn('⚠️  No findings in LLM response, using utterance only');
             }
+          } else {
+            console.warn('⚠️  No utterance in LLM response');
+            analysis = 'Unable to analyze report. Please try again.';
           }
           console.log('✅ LLM analysis complete');
         } catch (llmError) {

@@ -103,7 +103,7 @@ export interface ClientMessage {
 }
 
 export interface ServerMessage {
-  type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command' | 'start_video_vitals';
+  type: 'transcript' | 'llm_response' | 'error' | 'status' | 'audio' | 'camera_command' | 'start_video_vitals' | 'vitals_declined';
   data?: any;
   transcript?: TranscriptEvent;
   llmResponse?: LLMResponse;
