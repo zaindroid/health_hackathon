@@ -29,7 +29,7 @@ function App() {
   /**
    * Handle session start (called by voice bot after role detection)
    */
-  const handleStartSession = async (role: 'patient' | 'doctor', useCase?: string) => {
+  const handleStartSession = async (role: 'patient' | 'doctor', useCase?: string): Promise<string | null> => {
     try {
       // Call session API to create new session
       const response = await fetch('http://localhost:3001/api/session/start', {
@@ -49,13 +49,15 @@ function App() {
           role: data.role,
           useCase: data.useCase,
         });
-        // Don't set showMainInterface=true here - let user interact first
-        // Main interface will show after user speaks or clicks
+        // Return session ID so VoiceInterface can link it before starting recording
+        return data.sessionId;
       } else {
         console.error('❌ Failed to start session:', data.error);
+        return null;
       }
     } catch (error) {
       console.error('❌ Error starting session:', error);
+      return null;
     }
   };
 

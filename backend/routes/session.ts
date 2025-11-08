@@ -12,8 +12,8 @@ import sessionOrchestrator from '../services/sessionOrchestrator';
 import { kbRetriever } from '../rag/retriever_bedrock';
 import { getLLMProvider } from '../llm';
 
-// pdf-parse is a function that takes a buffer
-const pdfParse = require('pdf-parse');
+// pdf-parse v2 exports PDFParse class
+const { PDFParse } = require('pdf-parse');
 
 const router: Router = express.Router();
 
@@ -454,10 +454,12 @@ router.post('/upload-report', upload.single('file'), async (req: Request, res: R
 
     console.log(`📄 Processing PDF upload: ${file.originalname}`);
 
-    // Parse PDF using pdf-parse
+    // Parse PDF using pdf-parse v2 API
     const dataBuffer = await fs.promises.readFile(file.path);
-    const pdfData = await pdfParse(dataBuffer);
-    const text = pdfData.text;
+    const parser = new PDFParse({ data: dataBuffer });
+    const pdfResult = await parser.getText();
+    const text = pdfResult.text;
+    await parser.destroy(); // Clean up resources
 
     console.log(`✅ PDF parsed: ${text.length} characters extracted`);
 
@@ -542,7 +544,7 @@ Be specific with numbers and ranges. Say NORMAL or ABNORMAL clearly.`;
       analysis,
       reportInfo: {
         fileName: file.originalname,
-        pages: pdfData.numpages,
+        pages: pdfResult.total, // Total number of pages from pdf-parse v2
         textLength: text.length,
       },
     });

@@ -37,12 +37,8 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
   // Don't auto-start - user must click "Start Talking" button
   // Removed auto-start recording
 
-  // Sync session ID with voice handler when it changes
-  useEffect(() => {
-    if (sessionInfo?.sessionId && isConnected) {
-      setSessionId(sessionInfo.sessionId);
-    }
-  }, [sessionInfo?.sessionId, isConnected, setSessionId]);
+  // Removed problematic useEffect that was causing WebSocket to close
+  // Session ID will be set when user clicks "Start Talking" instead
 
   // Smart screen transition based on LLM intent
   useEffect(() => {
@@ -270,8 +266,15 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
           ) : (
             <button
               onClick={async () => {
+                // Create session first, then link it to WebSocket, then start recording
                 if (isInitialGreeting && onSessionReady) {
-                  await onSessionReady('patient');
+                  const sessionId = await onSessionReady('patient');
+                  if (sessionId) {
+                    // Link session ID to WebSocket BEFORE starting recording
+                    setSessionId(sessionId);
+                    // Small delay to ensure session ID is sent
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                  }
                 }
                 startRecording();
               }}
