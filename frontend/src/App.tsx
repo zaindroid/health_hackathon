@@ -32,7 +32,8 @@ function App() {
   const handleStartSession = async (role: 'patient' | 'doctor', useCase?: string): Promise<string | null> => {
     try {
       // Call session API to create new session
-      const response = await fetch('http://localhost:3001/api/session/start', {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/api/session/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +120,8 @@ function App() {
     if (!confirmEnd) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/session/end', {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/api/session/end`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +235,13 @@ function App() {
 
         {/* Report Upload Screen */}
         {currentScreen === 'report_upload' && (
-          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+            overflow: 'auto',
+            WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+          }}>
             <ReportUpload sessionId={sessionInfo?.sessionId} />
           </div>
         )}

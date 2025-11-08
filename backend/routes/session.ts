@@ -529,7 +529,19 @@ Return ONLY the JSON object, no code blocks, no markdown formatting.`;
                   parsedResponse = parsed;
                 }
               } catch (e) {
-                console.log('⚠️  Utterance looks like JSON but failed to parse');
+                console.log('⚠️  Utterance looks like JSON but failed to parse, error:', e);
+                console.log('📄 Utterance content:', utteranceStr.substring(0, 200));
+                // Try removing newlines and extra whitespace
+                try {
+                  const cleanedStr = utteranceStr.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+                  const parsed = JSON.parse(cleanedStr);
+                  if (parsed.findings) {
+                    console.log('✅ Parsed JSON after cleaning');
+                    parsedResponse = parsed;
+                  }
+                } catch (e2) {
+                  console.log('⚠️  Still failed after cleaning');
+                }
               }
             }
           }
@@ -572,10 +584,31 @@ Return ONLY the JSON object, no code blocks, no markdown formatting.`;
     // Clean up uploaded file
     await fs.promises.unlink(file.path);
 
+    // Count findings for auto-message
+    let findingsCount = 0;
+    let hasAbnormal = false;
+    try {
+      const parsedAnalysis = JSON.parse(analysis);
+      if (parsedAnalysis.findings) {
+        const normalCount = parsedAnalysis.findings.normal?.length || 0;
+        const abnormalCount = parsedAnalysis.findings.abnormal?.length || 0;
+        findingsCount = normalCount + abnormalCount;
+        hasAbnormal = abnormalCount > 0;
+      }
+    } catch (e) {
+      // If analysis isn't JSON, that's okay
+    }
+
+    // Generate auto-message for voice agent
+    const autoMessage = hasAbnormal
+      ? `I've analyzed your report and found ${findingsCount} lab values. I notice some values that need attention. Would you like me to explain the findings in detail?`
+      : `I've analyzed your report and found ${findingsCount} lab values. Most of your results look good! Would you like me to walk you through them?`;
+
     return res.json({
       success: true,
       message: 'Report analyzed successfully',
       analysis,
+      autoMessage, // Auto-message for voice agent to speak
       reportInfo: {
         fileName: file.originalname,
         pages: pdfResult.total, // Total number of pages from pdf-parse v2
@@ -587,6 +620,38 @@ Return ONLY the JSON object, no code blocks, no markdown formatting.`;
     return res.status(500).json({
       success: false,
       error: error.message || 'Failed to process report'
+    });
+  }
+});
+
+/**
+ * POST /api/session/tts/speak
+ * Trigger TTS for a message (used for auto-messages after report upload)
+ */
+router.post('/tts/speak', async (req: Request, res: Response) => {
+  try {
+    const { text, sessionId } = req.body;
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        error: 'text is required'
+      });
+    }
+
+    console.log(`🔊 TTS speak request: "${text.substring(0, 50)}..."`);
+
+    // For now, just return success - the voice interface will handle TTS through WebSocket
+    // The auto-message will be included in the analysis response and shown as agent text
+    return res.json({
+      success: true,
+      message: 'TTS message queued'
+    });
+  } catch (error: any) {
+    console.error('❌ TTS speak error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to trigger TTS'
     });
   }
 });

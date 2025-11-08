@@ -83,35 +83,35 @@ function LabValueChart({ labValue }: { labValue: LabValue }) {
   return (
     <div style={{
       backgroundColor: 'white',
-      borderRadius: '10px',
-      padding: '1rem',
-      marginBottom: '0.75rem',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-      borderLeft: `4px solid ${barColor}`
+      borderRadius: '8px',
+      padding: '0.65rem 0.85rem',
+      marginBottom: '0.5rem',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      borderLeft: `3px solid ${barColor}`
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
         <div>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{name}</div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '0.15rem' }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>{name}</div>
+          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '0.1rem' }}>
             Range: {min} - {max} {unit}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: barColor }}>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', color: barColor }}>
             {value}
           </div>
-          <div style={{ fontSize: '11px', color: '#64748b' }}>{unit}</div>
+          <div style={{ fontSize: '10px', color: '#64748b' }}>{unit}</div>
         </div>
       </div>
 
       {/* Visual Bar Chart */}
-      <div style={{ position: 'relative', marginBottom: '0.4rem' }}>
+      <div style={{ position: 'relative', marginBottom: '0.3rem' }}>
         {/* Background bar */}
         <div style={{
-          height: '24px',
+          height: '18px',
           backgroundColor: bgColor,
-          borderRadius: '6px',
+          borderRadius: '4px',
           position: 'relative',
           overflow: 'hidden'
         }}>
@@ -134,11 +134,11 @@ function LabValueChart({ labValue }: { labValue: LabValue }) {
             left: `${percentage}%`,
             top: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '3px',
-            height: '30px',
+            width: '2px',
+            height: '22px',
             backgroundColor: barColor,
             borderRadius: '2px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
           }} />
 
           {/* Value circle */}
@@ -147,17 +147,17 @@ function LabValueChart({ labValue }: { labValue: LabValue }) {
             left: `${percentage}%`,
             top: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '12px',
-            height: '12px',
+            width: '10px',
+            height: '10px',
             backgroundColor: barColor,
             borderRadius: '50%',
             border: '2px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+            boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
           }} />
         </div>
 
         {/* Range labels */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem', fontSize: '10px', color: '#94a3b8' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontSize: '9px', color: '#94a3b8' }}>
           <span>{min}</span>
           <span>{max}</span>
         </div>
@@ -166,9 +166,9 @@ function LabValueChart({ labValue }: { labValue: LabValue }) {
       {/* Status badge */}
       <div style={{
         display: 'inline-block',
-        padding: '0.2rem 0.6rem',
-        borderRadius: '10px',
-        fontSize: '11px',
+        padding: '0.15rem 0.5rem',
+        borderRadius: '8px',
+        fontSize: '10px',
         fontWeight: '600',
         backgroundColor: bgColor,
         color: barColor,
@@ -216,11 +216,6 @@ export function ReportInfographic({ analysisText }: ReportInfographicProps) {
 
   // If we have structured data, show infographic
   if (reportData?.findings) {
-    const normalCount = reportData.findings.normal?.length || 0;
-    const abnormalCount = reportData.findings.abnormal?.length || 0;
-    const totalCount = normalCount + abnormalCount;
-    const healthScore = totalCount > 0 ? Math.round((normalCount / totalCount) * 100) : 0;
-
     // Parse all lab values from normal and abnormal findings
     const allLabValues: LabValue[] = [];
     const unparsedValues: string[] = [];
@@ -244,101 +239,52 @@ export function ReportInfographic({ analysisText }: ReportInfographicProps) {
     return (
       <div
         style={{
-          maxWidth: '900px',
           width: '100%',
-          backgroundColor: '#f8fafc',
-          borderRadius: '16px',
-          padding: '0',
-          marginBottom: '1rem',
-          overflow: 'hidden',
+          maxWidth: '900px',
         }}
       >
         {/* Header with gradient */}
         <div style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          padding: '1.5rem',
-          color: 'white'
+          padding: '1rem',
+          color: 'white',
+          borderRadius: '12px 12px 0 0',
         }}>
-          <h3 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 0.25rem 0' }}>
-            Your Health Report
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 0.15rem 0' }}>
+            📊 Your Health Report
           </h3>
           {reportData.report_type && (
-            <p style={{ fontSize: '14px', opacity: 0.9, margin: 0 }}>
+            <p style={{ fontSize: '12px', opacity: 0.9, margin: 0 }}>
               {reportData.report_type}
             </p>
           )}
         </div>
 
-        {/* Main content area */}
-        <div style={{ padding: '1.5rem' }}>
-
-        {/* Health Score Card */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '1.25rem',
-          marginBottom: '1rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            fontSize: '36px',
-            fontWeight: 'bold',
-            background: healthScore >= 70 ? 'linear-gradient(135deg, #10b981, #059669)' :
-                       healthScore >= 50 ? 'linear-gradient(135deg, #f59e0b, #d97706)' :
-                       'linear-gradient(135deg, #ef4444, #dc2626)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            marginBottom: '0.25rem'
-          }}>
-            {healthScore}%
-          </div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '0.75rem' }}>
-            Health Score
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', fontSize: '13px' }}>
-            <div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#10b981' }}>{normalCount}</div>
-              <div style={{ color: '#64748b' }}>Normal</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>{abnormalCount}</div>
-              <div style={{ color: '#64748b' }}>Needs Attention</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Voice prompt - no text explanation shown */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            borderLeft: '4px solid #667eea',
-            textAlign: 'center'
-          }}
-        >
-          <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: '1.5' }}>
-            💬 <strong>Listen to me explain your results</strong> - I'll walk you through each value
-          </p>
-        </div>
-
-        {/* Lab Values with Visual Charts */}
+        {/* Lab Values with Visual Charts - SCROLLABLE CONTAINER */}
         {allLabValues.length > 0 && (
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '1rem',
+            borderRadius: '0 0 12px 12px',
+          }}>
             <h4 style={{
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '600',
               color: '#1e293b',
               marginBottom: '0.75rem',
+              marginTop: 0,
             }}>
-              📊 Lab Results ({allLabValues.length} values)
+              Lab Results ({allLabValues.length} values)
             </h4>
-            {allLabValues.map((labValue, idx) => (
-              <LabValueChart key={idx} labValue={labValue} />
-            ))}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+            }}>
+              {allLabValues.map((labValue, idx) => (
+                <LabValueChart key={idx} labValue={labValue} />
+              ))}
+            </div>
           </div>
         )}
 
@@ -419,7 +365,6 @@ export function ReportInfographic({ analysisText }: ReportInfographicProps) {
           <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: '1.5' }}>
             💬 <strong>Continue with voice:</strong> Ask questions about your results, or say "yes" to check your vital signs using your camera.
           </p>
-        </div>
         </div>
       </div>
     );

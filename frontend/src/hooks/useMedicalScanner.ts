@@ -73,7 +73,8 @@ interface UseMedicalScannerResult {
   reset: () => Promise<void>;
 }
 
-const PYTHON_SERVICE_URL = 'http://localhost:8000';
+// MediaPipe Python service on port 8000
+const PYTHON_SERVICE_URL = `http://${window.location.hostname}:8000`;
 
 export function useMedicalScanner(): UseMedicalScannerResult {
   const [faceDetected, setFaceDetected] = useState(false);

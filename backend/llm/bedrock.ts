@@ -46,10 +46,14 @@ export class BedrockLLMProvider implements LLMProvider {
       const systemPrompt = this.buildSystemPrompt();
       const userPrompt = this.buildUserPrompt(transcript, context);
 
+      // Determine if this is a report analysis (needs more tokens for structured JSON)
+      const isReportAnalysis = transcript.includes('REPORT TEXT:') || transcript.includes('analyzing a medical report');
+      const maxTokens = isReportAnalysis ? 1500 : 300; // More tokens for report analysis
+
       // Prepare the request payload for Claude
       const payload = {
         anthropic_version: 'bedrock-2023-05-31',
-        max_tokens: 300, // Reduced from 1024 for faster responses
+        max_tokens: maxTokens,
         temperature: 0.7,
         system: systemPrompt,
         messages: [
@@ -113,7 +117,11 @@ MEDICAL REPORT ANALYSIS (THIS IS YOUR PRIMARY JOB):
 - DO NOT ask "what kind of report?" - the report type is in the context or obvious from content
 - DO NOT ask "can you upload?" - it's ALREADY uploaded (check context)
 - Use SIMPLE, FRIENDLY language - NO medical jargon
-- After explaining results, ALWAYS offer: "Would you like me to check your current vital signs using your camera? I can measure your heart rate and other health indicators right now."
+- FIRST: Explain ALL the findings thoroughly in simple terms
+- SECOND: If there are any concerning or abnormal findings, gently explain what they mean
+- THIRD: ONLY if there are concerning findings that might show up in vitals, offer video analysis: "Since your [specific deficiency/issue] can affect your [heart rate/energy/etc], would you like me to check your current vital signs using your camera to see how it's affecting you right now?"
+- If user says NO to video check: Gracefully wrap up - "No problem at all! Make sure to discuss these results with your doctor. Take care and feel free to come back anytime you need help understanding your health reports."
+- If user says YES: Proceed with intent "vitals_consent_yes"
 - Examples of GOOD explanations:
   * "Your red blood cells are a bit low at 10.2 (normal is 12-16). This might be why you feel tired. Let's talk to your doctor about this."
   * "Great news! Your white blood cells are normal at 8,500. Your body's defense system is working well."

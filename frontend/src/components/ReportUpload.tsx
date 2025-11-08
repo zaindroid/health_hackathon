@@ -15,6 +15,7 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoMessage, setAutoMessage] = useState<string | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -43,7 +44,8 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
       formData.append('sessionId', sessionId);
 
       console.log('📤 Uploading report...');
-      const response = await fetch('http://localhost:3001/api/session/upload-report', {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/api/session/upload-report`, {
         method: 'POST',
         body: formData,
       });
@@ -53,6 +55,21 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
       if (data.success) {
         console.log('✅ Report uploaded and analyzed:', data);
         setAnalysis(data.analysis);
+
+        // Store auto-message to display AND trigger speech
+        if (data.autoMessage) {
+          setAutoMessage(data.autoMessage);
+
+          // Use Web Speech API to speak the message immediately
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(data.autoMessage);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            window.speechSynthesis.speak(utterance);
+            console.log('🔊 Speaking auto-message:', data.autoMessage);
+          }
+        }
       } else {
         setError(data.error || 'Failed to process report');
       }
@@ -135,17 +152,34 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
     return (
       <div
         style={{
-          height: '100vh',
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           padding: '1rem',
           backgroundColor: '#f5f5f5',
-          overflowY: 'auto',
-          overflowX: 'hidden',
+          paddingBottom: '2rem',
         }}
       >
+        {/* Auto-message from agent */}
+        {autoMessage && (
+          <div style={{
+            maxWidth: '900px',
+            width: '100%',
+            marginBottom: '1rem',
+            backgroundColor: '#667eea',
+            color: 'white',
+            padding: '1rem 1.5rem',
+            borderRadius: '12px',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            animation: 'fadeIn 0.5s ease-in'
+          }}>
+            <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '0.25rem' }}>🤖 Health Helper</div>
+            <div style={{ fontSize: '16px', lineHeight: '1.5' }}>{autoMessage}</div>
+          </div>
+        )}
+        <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+
         {/* Back button */}
         <div style={{ maxWidth: '900px', width: '100%', marginBottom: '0.5rem' }}>
           <button
@@ -153,6 +187,7 @@ export function ReportUpload({ sessionId }: ReportUploadProps) {
               setAnalysis(null);
               setSelectedFile(null);
               setError(null);
+              setAutoMessage(null);
             }}
             style={{
               padding: '0.75rem 1.5rem',

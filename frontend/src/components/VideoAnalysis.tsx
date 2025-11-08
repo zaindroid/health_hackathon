@@ -5,7 +5,7 @@
  * Captures video frames, sends to backend, displays heart rate and rPPG signals.
  */
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useVideoHealth } from '../hooks/useVideoHealth';
 import { useMedicalScanner } from '../hooks/useMedicalScanner';
 
@@ -26,7 +26,7 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
   const [isComplete, setIsComplete] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Initializing camera...');
   const recordingStartTime = useRef<number | null>(null);
-  const RECORDING_DURATION = 15000; // 15 seconds
+  const RECORDING_DURATION = 10000; // 10 seconds for quick analysis
 
   // CAIRE API for heart rate
   const {
@@ -128,6 +128,7 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
   const handleStartRecording = async () => {
     try {
       console.log('📹 Starting recording...');
+      setStatusMessage('Connecting to analysis service...');
 
       // Check if video element already has a stream
       let activeStream = stream;
@@ -154,6 +155,7 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
       }
 
       console.log('🔌 Connecting to WebSocket...');
+      setStatusMessage('Starting heart rate analysis...');
       // Connect to backend WebSocket
       await connect();
 
@@ -165,11 +167,13 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
       recordingStartTime.current = Date.now();
       setIsRecording(true);
       setRecordingProgress(0);
+      setStatusMessage('Recording vitals... Stay still');
 
       console.log('✅ Recording started successfully');
     } catch (err) {
       console.error('❌ Failed to start recording:', err);
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setStatusMessage(`Error: ${errorMsg}`);
       alert(`Failed to start recording: ${errorMsg}`);
     }
   };
@@ -214,11 +218,11 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
   }, [isRecording, isConnected, sendFrame, analyzeEyeMetrics]);
 
   /**
-   * Auto-start webcam and monitoring when face is detected
+   * Auto-start webcam and immediately begin recording
    */
   useEffect(() => {
     let mounted = true;
-    let faceCheckInterval: NodeJS.Timeout;
+    let analyzeInterval: NodeJS.Timeout;
 
     const autoStart = async () => {
       try {
@@ -227,22 +231,29 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
 
         if (!mounted) return;
 
-        setStatusMessage('Please position your face in the frame');
+        // Give camera 1 second to stabilize
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Wait for face detection from MediaPipe
-        faceCheckInterval = setInterval(() => {
-          if (faceDetected && !isRecording && mounted) {
-            setStatusMessage('Face detected! Starting vitals check...');
-            clearInterval(faceCheckInterval);
+        if (!mounted) return;
 
-            // Small delay then start
-            setTimeout(async () => {
-              if (mounted && !isRecording) {
-                await handleStartRecording();
-              }
-            }, 1000);
+        setStatusMessage('Position your face in the frame...');
+
+        // Start analyzing frames with MediaPipe to get eye metrics
+        analyzeInterval = setInterval(() => {
+          const { fullDataUrl } = captureFrame();
+          if (fullDataUrl && !isRecording) {
+            analyzeEyeMetrics(fullDataUrl);
           }
-        }, 500);
+        }, 500); // Every 500ms
+
+        // Auto-start recording after 3 seconds (don't wait for face detection)
+        setTimeout(async () => {
+          if (mounted && !isRecording && !isComplete) {
+            console.log('🎬 Auto-starting recording...');
+            await handleStartRecording();
+          }
+        }, 3000);
+
       } catch (error) {
         console.error('Auto-start failed:', error);
         setStatusMessage('Camera access denied. Please grant camera permissions.');
@@ -253,11 +264,11 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
 
     return () => {
       mounted = false;
-      if (faceCheckInterval) clearInterval(faceCheckInterval);
+      if (analyzeInterval) clearInterval(analyzeInterval);
       stopWebcam();
       disconnect();
     };
-  }, []); // Run once on mount
+  }, []);  // Run once on mount
 
   /**
    * Send vitals data to backend and trigger voice explanation
@@ -269,6 +280,8 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
     }
 
     try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3001`;
+
       // Send vitals data
       const vitalsData = [];
 
@@ -298,19 +311,10 @@ export const VideoAnalysis: React.FC<VideoAnalysisProps> = ({
         });
       }
 
-      // Send each vital
-      for (const vital of vitalsData) {
-        await fetch('http://localhost:3001/api/session/data/vital-displayed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, metric: vital }),
-        });
-      }
-
-      console.log('✅ Vitals data sent to backend:', vitalsData);
+      console.log('✅ Vitals data collected:', vitalsData);
 
       // Notify backend that vitals are complete
-      await fetch('http://localhost:3001/api/session/vitals/complete', {
+      await fetch(`${backendUrl}/api/session/vitals/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

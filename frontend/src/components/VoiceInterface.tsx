@@ -18,7 +18,7 @@ interface VoiceInterfaceProps {
   onScreenTransition?: (intent: string) => void; // Called with intent to transition screens
 }
 
-export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting = false, onScreenTransition }: VoiceInterfaceProps) {
+export function VoiceInterface({ onSessionReady, isInitialGreeting = false, onScreenTransition }: VoiceInterfaceProps) {
   const {
     isConnected,
     isRecording,
@@ -269,14 +269,14 @@ export function VoiceInterface({ sessionInfo, onSessionReady, isInitialGreeting 
                 // Create session first, then link it to WebSocket, then start recording
                 if (isInitialGreeting && onSessionReady) {
                   const sessionId = await onSessionReady('patient');
-                  if (sessionId) {
+                  if (sessionId !== undefined && sessionId !== null) {
                     // Link session ID to WebSocket BEFORE starting recording
                     setSessionId(sessionId);
                     // Small delay to ensure session ID is sent
                     await new Promise(resolve => setTimeout(resolve, 50));
                   }
                 }
-                startRecording();
+                void startRecording();
               }}
               disabled={!isConnected}
               style={{
