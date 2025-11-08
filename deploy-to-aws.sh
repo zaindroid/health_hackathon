@@ -23,8 +23,14 @@ echo -e "${BLUE}📍 Region: $REGION${NC}"
 
 # Check AWS CLI
 if ! command -v aws &> /dev/null; then
-    echo -e "${RED}❌ AWS CLI not found. Installing...${NC}"
-    pip install awscli
+    echo -e "${RED}❌ AWS CLI not found. Installing with pipx...${NC}"
+    # Try pipx first, fallback to manual installation
+    if command -v pipx &> /dev/null; then
+        pipx install awscli
+    else
+        echo -e "${RED}Please install AWS CLI manually: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html${NC}"
+        exit 1
+    fi
 fi
 
 # Check credentials
@@ -65,11 +71,28 @@ cd ..
 # Install EB CLI if not present
 if ! command -v eb &> /dev/null; then
     echo "Installing Elastic Beanstalk CLI..."
-    # Use virtual environment to avoid externally-managed-environment error
-    python3 -m venv /tmp/eb-venv
-    /tmp/eb-venv/bin/pip install awsebcli
-    # Add to PATH for this session
-    export PATH="/tmp/eb-venv/bin:$PATH"
+    # Try pipx first (cleanest approach)
+    if command -v pipx &> /dev/null; then
+        pipx install awsebcli
+        # Ensure pipx bin directory is in PATH
+        export PATH="$HOME/.local/bin:$PATH"
+    else
+        # Fallback to virtual environment
+        echo "Using Python virtual environment for EB CLI..."
+        if [ ! -d "/tmp/eb-venv" ]; then
+            python3 -m venv /tmp/eb-venv
+        fi
+        /tmp/eb-venv/bin/pip install --quiet awsebcli
+        # Add to PATH for this session
+        export PATH="/tmp/eb-venv/bin:$PATH"
+    fi
+
+    # Verify installation
+    if ! command -v eb &> /dev/null; then
+        echo -e "${RED}❌ Failed to install EB CLI. Please install manually: pip install awsebcli --user${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ EB CLI installed successfully${NC}"
 fi
 
 # Initialize EB application (if not exists)
