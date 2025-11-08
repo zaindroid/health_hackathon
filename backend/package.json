@@ -2,11 +2,11 @@
   "name": "healthcare-voice-agent-backend",
   "version": "1.0.0",
   "description": "Real-time AI Voice Agent Backend for Healthcare Education",
-  "main": "dist/server.js",
+  "main": "dist/backend/server.js",
   "scripts": {
     "dev": "tsx watch server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/backend/server.js",
     "test": "echo \"No tests yet\" && exit 0",
     "lint": "eslint . --ext .ts",
     "type-check": "tsc --noEmit"

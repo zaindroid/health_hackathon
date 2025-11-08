@@ -1,0 +1,46 @@
+# Elastic Beanstalk ignore file
+# This tells EB CLI what NOT to include in deployment package
+
+# Node modules (will be installed via package.json)
+node_modules/
+package-lock.json
+
+# Python virtual environments
+venv/
+venv-deploy/
+python-services/venv/
+*.pyc
+*.pyo
+__pycache__/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+database/
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.env.*
+
+# Build artifacts (keep dist/ - it contains compiled code needed to run)
+
+# Uploads and temporary files
+uploads/
+*.log
+
+# Demo and test files
+video health signals/
+navigation_tests/
+test-ollama.js
+test_heart_rate.js
+
+# Windows Zone Identifiers
+*:Zone.Identifier
+
+# EB configuration (will be created during init)
+.elasticbeanstalk/
